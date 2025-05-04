@@ -9,8 +9,8 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject bloodPrefab;
     
     private int currentHp;
-    private int maxHp = 100;
-    
+    private const int maxHp = 100;
+
     public Vector2Int currentGridPos;
     private TextSpawner textSpawner;
     private GameObject healthBar;
