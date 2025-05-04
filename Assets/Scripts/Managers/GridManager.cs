@@ -41,7 +41,7 @@ namespace Managers
             }
         }
 
-        private bool IsWithinBounds(Vector2Int gridPos)
+        public bool IsWithinBounds(Vector2Int gridPos)
         {
             return gridCells.ContainsKey(gridPos);
         }

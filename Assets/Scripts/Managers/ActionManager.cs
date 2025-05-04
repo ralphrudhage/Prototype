@@ -124,8 +124,16 @@ namespace Managers
                 Destroy(action);
             }
 
-            StartCoroutine(SpawnNewActions());
+            // StartCoroutine(SpawnNewActions());
+            StartCoroutine(EnemyTurnThenDraw());
         }
+        
+        private IEnumerator EnemyTurnThenDraw()
+        {
+            yield return EnemyManager.Instance.TakeEnemyTurn();
+            yield return StartCoroutine(SpawnNewActions());
+        }
+
 
         // called from UI when action is selected 
         public void SetCurrentAction(SelectedAction action)
