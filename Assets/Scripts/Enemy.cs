@@ -30,7 +30,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);
-        textSpawner.SpawnFloatingText(damage.ToString(), transform.position);
+        textSpawner.SpawnFloatingText(damage.ToString(), bloodParent.transform.position);
         currentHp -= damage;
         UpdateHeathBar();
         if (currentHp <= 0)
