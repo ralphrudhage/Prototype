@@ -1,8 +1,9 @@
 using TMPro;
 using UnityEngine;
 
-public class SpawnText : MonoBehaviour
+public class TextSpawner : MonoBehaviour
 {
+    [SerializeField] private GameObject healthBar;
     [SerializeField] private GameObject textPrefab;
     
     public void SpawnFloatingText(string param, Vector3 worldPosition)
@@ -14,5 +15,10 @@ public class SpawnText : MonoBehaviour
         text.text = param;
         
         Destroy(gameLabel, 1f);
+    }
+
+    public GameObject SpawnHealthBar()
+    {
+        return Instantiate(healthBar, transform);
     }
 }

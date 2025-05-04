@@ -4,38 +4,45 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] GameObject bloodParent;
-    [SerializeField] GameObject bloodPrefab;
-    [SerializeField] TextMeshProUGUI healthText;
+    [SerializeField] private GameObject hpPos;
+    [SerializeField] private GameObject bloodParent;
+    [SerializeField] private GameObject bloodPrefab;
     
-    private int health = 1000;
+    private int currentHp;
+    private int maxHp = 100;
+    
     public Vector2Int currentGridPos;
-    private SpawnText spawnText;
+    private TextSpawner textSpawner;
+    private GameObject healthBar;
     
     void Start()
     {
-        spawnText = FindAnyObjectByType<SpawnText>();
+        textSpawner = FindAnyObjectByType<TextSpawner>();
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
+        healthBar = textSpawner.SpawnHealthBar();
         
-        UpdateHeathText();
+        currentHp = maxHp;
+        
+        UpdateHeathBar();
     }
     
     public void TakeDamage(int damage)
     {
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);
-        spawnText.SpawnFloatingText(damage.ToString(), transform.position);
-        health -= damage;
-        UpdateHeathText();
-        if (health <= 0)
+        textSpawner.SpawnFloatingText(damage.ToString(), transform.position);
+        currentHp -= damage;
+        UpdateHeathBar();
+        if (currentHp <= 0)
         {
             Debug.LogFormat("ENEMY DIED");
         }
     }
 
-    private void UpdateHeathText()
+    private void UpdateHeathBar()
     {
-        healthText.text = health + " / 1000";
+        healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);;
+        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
 
     private void OnMouseDown()

@@ -8,10 +8,10 @@ namespace Managers
     public class GridManager : MonoBehaviour
     {
         [SerializeField] private Tilemap gridTilemap;
-        [SerializeField] GameObject circlePrefab;
+        [SerializeField] private GameObject circlePrefab;
         
-        private List<GameObject> activeCircles = new();
-        private Dictionary<Vector2Int, GridCell> gridCells = new();
+        private readonly List<GameObject> activeCircles = new();
+        private readonly Dictionary<Vector2Int, GridCell> gridCells = new();
         private PlayerController player;
         
         public static GridManager Instance { get; private set; }
@@ -99,6 +99,7 @@ namespace Managers
             activeCircles.Clear();
         }
 
+        /*
         private void OnDrawGizmos()
         {
             if (gridTilemap == null || gridCells == null) return;
@@ -111,8 +112,8 @@ namespace Managers
                 Gizmos.DrawWireCube(center, Vector3.one);
             }
         }
-
-
+        */
+        
         public void OnHighlightTileClicked(Vector2Int gridPos)
         {
             if (ActionManager.Instance.PerformAction())
