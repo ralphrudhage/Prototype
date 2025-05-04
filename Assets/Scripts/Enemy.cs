@@ -9,23 +9,18 @@ public class Enemy : MonoBehaviour
     [SerializeField] TextMeshProUGUI healthText;
     
     private int health = 1000;
-    private readonly Vector2Int startingGridPos = new(6, 4);
     public Vector2Int currentGridPos;
     private SpawnText spawnText;
     
     void Start()
     {
         spawnText = FindAnyObjectByType<SpawnText>();
-        SetGridPosition(startingGridPos);
+        currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
+        transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
+        
         UpdateHeathText();
     }
     
-    public void SetGridPosition(Vector2Int gridPos)
-    {
-        currentGridPos = gridPos;
-        transform.position = GridManager.Instance.GetWorldPosition(gridPos);
-    }
-
     public void TakeDamage(int damage)
     {
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);

@@ -5574,8 +5574,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d9f8c52a35c84611963fa58f8d842bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridTilemap: {fileID: 196174458}
   circlePrefab: {fileID: 6996367568957163054, guid: 8ef5f326580224f3da31104fd568a7eb, type: 3}
-  cellSize: {x: 1, y: 1}
 --- !u!1 &1616045476
 GameObject:
   m_ObjectHideFlags: 0

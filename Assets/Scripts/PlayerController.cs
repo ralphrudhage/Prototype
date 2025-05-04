@@ -6,7 +6,6 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI energyText;
     
-    private readonly Vector2Int startingGridPos = new(4, 2);
     public Vector2Int currentGridPos;
     
     private int currentEnergy;
@@ -14,7 +13,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         energyText.text = "";
-        currentGridPos = startingGridPos;
+        currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
     }
     

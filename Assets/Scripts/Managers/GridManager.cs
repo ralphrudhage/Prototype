@@ -1,20 +1,19 @@
 using System.Collections.Generic;
+using Model;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace Managers
 {
     public class GridManager : MonoBehaviour
     {
+        [SerializeField] private Tilemap gridTilemap;
         [SerializeField] GameObject circlePrefab;
-        private List<GameObject> activeCircles = new();
-
-        private PlayerController player;
-
-        private int width = 20;
-        private int height = 7;
         
-        public Vector2 cellSize = Vector2.one;
-
+        private List<GameObject> activeCircles = new();
+        private Dictionary<Vector2Int, GridCell> gridCells = new();
+        private PlayerController player;
+        
         public static GridManager Instance { get; private set; }
 
         private void Awake()
@@ -31,18 +30,34 @@ namespace Managers
         private void OnEnable()
         {
             player = FindAnyObjectByType<PlayerController>();
+            gridCells.Clear();
+
+            foreach (var cellPos in gridTilemap.cellBounds.allPositionsWithin)
+            {
+                if (!gridTilemap.HasTile(cellPos)) continue;
+
+                var gridPos = new Vector2Int(cellPos.x, cellPos.y);
+                gridCells[gridPos] = new GridCell(gridPos, walkable: true);
+            }
+        }
+
+        private bool IsWithinBounds(Vector2Int gridPos)
+        {
+            return gridCells.ContainsKey(gridPos);
         }
 
         public Vector3 GetWorldPosition(Vector2Int gridPos)
         {
-            return transform.position + new Vector3(gridPos.x + 0.5f, gridPos.y + 0.5f, 0);
+            return gridTilemap.GetCellCenterWorld((Vector3Int) gridPos);
         }
-
-        public bool IsWithinBounds(Vector2Int gridPos)
+        
+        public Vector2Int GetGridPositionFromWorld(Vector3 worldPos)
         {
-            return gridPos.x >= 0 && gridPos.y >= 0 && gridPos.x < width && gridPos.y < height;
+            var cellPos = gridTilemap.WorldToCell(worldPos);
+            return new Vector2Int(cellPos.x, cellPos.y);
         }
 
+        
         public void ShowMoveCircles(Vector2Int from, int range)
         {
             ClearCircles();
@@ -86,18 +101,17 @@ namespace Managers
 
         private void OnDrawGizmos()
         {
+            if (gridTilemap == null || gridCells == null) return;
+
             Gizmos.color = Color.green;
 
-            for (int x = 0; x < width; x++)
+            foreach (var cell in gridCells.Values)
             {
-                for (int y = 0; y < height; y++)
-                {
-                    Vector3 cellCenter = transform.position +
-                                         new Vector3((x + 0.5f) * cellSize.x, (y + 0.5f) * cellSize.y, 0);
-                    Gizmos.DrawWireCube(cellCenter, new Vector3(cellSize.x, cellSize.y, 0));
-                }
+                var center = GetWorldPosition(cell.position);
+                Gizmos.DrawWireCube(center, Vector3.one);
             }
         }
+
 
         public void OnHighlightTileClicked(Vector2Int gridPos)
         {
