@@ -8,11 +8,13 @@ namespace DefaultNamespace
         private const float speed = 5f;
         private const float lifetime = 3f;
         private Vector2 direction;
+        private bool isEnemyTarget;
 
-        public void Initialize(Vector2 targetPosition, int targetDamage)
+        public void Initialize(Vector2 targetPosition, int targetDamage, bool isEnemy)
         {
             direction = (targetPosition - (Vector2)transform.position).normalized;
             damage = targetDamage;
+            isEnemyTarget = isEnemy;
             Destroy(gameObject, lifetime);
         }
 
@@ -23,16 +25,21 @@ namespace DefaultNamespace
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.CompareTag("Player"))
+            if (isEnemyTarget)
             {
-                // TODO: Call PlayerController.TakeDamage()
-                Destroy(gameObject, 0.1f);
+                if (other.CompareTag("Enemy"))
+                {
+                    other.gameObject.GetComponent<Enemy>().TakeDamage(damage);
+                    Destroy(gameObject, 0.1f);
+                }
             }
-
-            if (other.CompareTag("Enemy"))
+            else
             {
-                other.gameObject.GetComponent<Enemy>().TakeDamage(damage);
-                Destroy(gameObject, 0.1f);
+                if (other.CompareTag("Player"))
+                {
+                    // TODO: Call PlayerController.TakeDamage()
+                    Destroy(gameObject, 0.1f);
+                }
             }
         }
     }

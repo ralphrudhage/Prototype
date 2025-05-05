@@ -37,6 +37,10 @@ namespace Managers
                 if (!gridTilemap.HasTile(cellPos)) continue;
 
                 var gridPos = new Vector2Int(cellPos.x, cellPos.y);
+                if (gridPos.y == 0)
+                {
+                    // Debug.Log($"Adding walkable tile: {gridPos}");
+                }
                 gridCells[gridPos] = new GridCell(gridPos, walkable: true);
             }
         }
@@ -195,7 +199,7 @@ namespace Managers
             return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
         }
         
-        private List<Vector2Int> GetNeighbors(Vector2Int pos)
+        public List<Vector2Int> GetNeighbors(Vector2Int pos)
         {
             var directions = new List<Vector2Int>
             {
@@ -238,5 +242,13 @@ namespace Managers
 
             return results;
         }
+        
+        public bool IsWalkable(Vector2Int pos)
+        {
+            bool result = gridCells.TryGetValue(pos, out var cell) && cell.isWalkable;
+            // if (!result) Debug.Log($"Tile {pos} is not walkable");
+            return result;
+        }
+
     }
 }

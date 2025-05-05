@@ -40,7 +40,7 @@ public class SelectedAction : MonoBehaviour
 
     public void InitAction()
     {
-        if (Player.Instance.GetCurrentEnergy() >= gameAction.cost)
+        if (Player.Instance.GetCurrentAP() >= gameAction.cost)
         {
             ActionManager.Instance.SetCurrentAction(this);
             isSelected = true;

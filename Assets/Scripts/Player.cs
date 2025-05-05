@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
     public Vector2Int currentGridPos;
     
     private int currentAP;
+    private const int currentRange = 6;
     
     public static Player Instance { get; private set; }
     
@@ -31,12 +32,14 @@ public class Player : MonoBehaviour
         energyText.text = "";
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
+        Debug.Log($"Player set at {currentGridPos}");
     }
     
     public void SetGridPosition(Vector2Int gridPos)
     {
         currentGridPos = gridPos;
         transform.position = GridManager.Instance.GetWorldPosition(gridPos);
+        Debug.Log($"Player set at {currentGridPos}");
     }
 
     public void UseAP(int actionPoint)
@@ -45,9 +48,14 @@ public class Player : MonoBehaviour
         energyText.text = currentAP.ToString();
     }
 
-    public int GetCurrentEnergy()
+    public int GetCurrentAP()
     {
         return currentAP;
+    }
+
+    public int GetCurrentRange()
+    {
+        return currentRange;
     }
 
     public void ResetAP()
@@ -59,6 +67,6 @@ public class Player : MonoBehaviour
     public void AttackEnemy(Vector2 enemyPosition, int damage)
     {
         var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
-        bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage);
+        bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage, true);
     }
 }
