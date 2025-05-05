@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour
     private const int maxActionPoints = 3;
     private const int rangedAttack = 6;
     private const int attackApCost = 2;
+    private const int damage = 10;
     private int currentAP;
 
     private const float actionDelay = 0.25f;
@@ -27,6 +28,8 @@ public class Enemy : MonoBehaviour
     private GameObject healthBar;
     private GameObject infoText;
     private Player player;
+    
+    public Vector2 targetPos;
 
     void Start()
     {
@@ -42,14 +45,16 @@ public class Enemy : MonoBehaviour
         healthBar = textSpawner.SpawnHealthBar();
         infoText = textSpawner.SpawnInfoText("AP: + " + currentAP, infoPos.transform.position);
         
+        targetPos = bloodParent.transform.position;
+        
         RefreshEnemyUI();
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damageTaken)
     {
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);
         textSpawner.SpawnFloatingText(damage.ToString(), bloodParent.transform.position);
-        currentHp -= damage;
+        currentHp -= damageTaken;
         RefreshEnemyUI();
         if (currentHp <= 0)
         {
@@ -68,6 +73,7 @@ public class Enemy : MonoBehaviour
 
     private void OnMouseDown()
     {
+        ActionManager.Instance.SetCurrentEnemy(this);
         ActionManager.Instance.PerformAction();
     }
 
@@ -138,10 +144,10 @@ public class Enemy : MonoBehaviour
         }
     }
     
-    private IEnumerator MoveTo(Vector2Int targetPos)
+    private IEnumerator MoveTo(Vector2Int pos)
     {
-        currentGridPos = targetPos;
-        transform.position = GridManager.Instance.GetWorldPosition(targetPos);
+        currentGridPos = pos;
+        transform.position = GridManager.Instance.GetWorldPosition(pos);
         currentAP -= 1;
         RefreshEnemyUI();
         
@@ -152,7 +158,7 @@ public class Enemy : MonoBehaviour
     private void AttackPlayer()
     {
         var bullet = Instantiate(projectilePrefab, bloodParent.transform.position, Quaternion.identity);
-        bullet.GetComponent<Projectile>().Initialize(Player.Instance.playerTarget.transform.position);
+        bullet.GetComponent<Projectile>().Initialize(Player.Instance.playerTarget.transform.position, damage);
         
         currentAP -= attackApCost;
         RefreshEnemyUI();

@@ -1,9 +1,11 @@
+using DefaultNamespace;
 using Managers;
 using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private TextMeshProUGUI energyText;
     [SerializeField] public GameObject playerTarget;
     
@@ -52,5 +54,11 @@ public class Player : MonoBehaviour
     {
         currentAP = 3;
         energyText.text = currentAP.ToString();
+    }
+
+    public void AttackEnemy(Vector2 enemyPosition, int damage)
+    {
+        var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
+        bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage);
     }
 }

@@ -15,6 +15,7 @@ namespace Managers
         [SerializeField] private GameObject actionPrefab;
 
         private SelectedAction currentAction;
+        private Enemy currentEnemy;
 
         private int currentTurn;
         private int discardedSize;
@@ -139,6 +140,16 @@ namespace Managers
         public void SetCurrentAction(SelectedAction action)
         {
             currentAction = action;
+        }
+
+        public void SetCurrentEnemy(Enemy enemy)
+        {
+            currentEnemy = enemy;
+        }
+
+        public Enemy GetCurrentEnemy()
+        {
+            return currentEnemy;
         }
 
         public bool PerformAction()

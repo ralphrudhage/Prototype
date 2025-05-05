@@ -222,6 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d723dec2d94c4c2085eacd34dc2c5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  projectilePrefab: {fileID: 4813708244785024224, guid: 8b689429bdcbd41a9a7de55714b60d75, type: 3}
   energyText: {fileID: 668451298}
   playerTarget: {fileID: 1782301868}
   currentGridPos: {x: 0, y: 0}
@@ -8382,6 +8383,7 @@ MonoBehaviour:
   bloodParent: {fileID: 1769852481}
   bloodPrefab: {fileID: 8530963074650853577, guid: af93e44ec220e410e80c3fc1ea7d5493, type: 3}
   currentGridPos: {x: 0, y: 0}
+  targetPos: {x: 0, y: 0}
 --- !u!212 &1680791190
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -8485,7 +8487,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0

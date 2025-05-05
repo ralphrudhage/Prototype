@@ -10,16 +10,15 @@ public class SelectedAction : MonoBehaviour
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private TextMeshProUGUI infoValue;
     public GameAction gameAction;
-    private Player player;
     private CursorManager cursorManager;
     private Enemy enemy;
     private bool isSelected;
+    private ActionManager actionManager;
 
     private void Start()
     {
         cursorManager = FindAnyObjectByType<CursorManager>();
-        player = FindAnyObjectByType<Player>();
-        enemy = FindAnyObjectByType<Enemy>();
+        actionManager = FindAnyObjectByType<ActionManager>();
     }
 
     public void SetUpAction(GameAction selectedAction)
@@ -41,7 +40,7 @@ public class SelectedAction : MonoBehaviour
 
     public void InitAction()
     {
-        if (player.GetCurrentEnergy() >= gameAction.cost)
+        if (Player.Instance.GetCurrentEnergy() >= gameAction.cost)
         {
             ActionManager.Instance.SetCurrentAction(this);
             isSelected = true;
@@ -49,7 +48,7 @@ public class SelectedAction : MonoBehaviour
             switch (gameAction)
             {
                 case MoveAction action:
-                    GridManager.Instance.ShowMoveCircles(player.currentGridPos, action.range);
+                    GridManager.Instance.ShowMoveCircles(Player.Instance.currentGridPos, action.range);
                     break;
 
                 case AttackAction:
@@ -62,7 +61,7 @@ public class SelectedAction : MonoBehaviour
             Debug.Log("Not enough energy");
         }
     }
-
+    
     public void ConsumeAction()
     {
         if (!isSelected) return;
@@ -73,12 +72,12 @@ public class SelectedAction : MonoBehaviour
                 break;
 
             case AttackAction action:
-                enemy.TakeDamage(action.damage);
+                Player.Instance.AttackEnemy(actionManager.GetCurrentEnemy().targetPos, action.damage);
                 cursorManager.SetCrossHair();
                 break;
         }
         
-        player.UseAP(gameAction.cost);
+        Player.Instance.UseAP(gameAction.cost);
         ActionManager.Instance.DiscardSelectedAction(gameAction);
         Destroy(gameObject);
     }
