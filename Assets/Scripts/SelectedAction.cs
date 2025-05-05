@@ -10,7 +10,7 @@ public class SelectedAction : MonoBehaviour
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private TextMeshProUGUI infoValue;
     public GameAction gameAction;
-    private PlayerController player;
+    private Player player;
     private CursorManager cursorManager;
     private Enemy enemy;
     private bool isSelected;
@@ -18,7 +18,7 @@ public class SelectedAction : MonoBehaviour
     private void Start()
     {
         cursorManager = FindAnyObjectByType<CursorManager>();
-        player = FindAnyObjectByType<PlayerController>();
+        player = FindAnyObjectByType<Player>();
         enemy = FindAnyObjectByType<Enemy>();
     }
 
@@ -78,7 +78,7 @@ public class SelectedAction : MonoBehaviour
                 break;
         }
         
-        player.UseEnergy(gameAction.cost);
+        player.UseAP(gameAction.cost);
         ActionManager.Instance.DiscardSelectedAction(gameAction);
         Destroy(gameObject);
     }

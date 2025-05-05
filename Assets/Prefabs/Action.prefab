@@ -465,7 +465,6 @@ MonoBehaviour:
   energyText: {fileID: 5110173129407599515}
   infoText: {fileID: 4945405321888067976}
   infoValue: {fileID: 491404714703552446}
-  actionType: 0
 --- !u!1 &4579115480266052889
 GameObject:
   m_ObjectHideFlags: 0
@@ -479,7 +478,7 @@ GameObject:
   - component: {fileID: 5110173129407599515}
   - component: {fileID: 5089794476649674743}
   m_Layer: 5
-  m_Name: EnergyCost
+  m_Name: ApCost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -532,7 +531,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100
+  m_text: 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d3f08b7ea0b464d7690b74e10d8e3b23, type: 2}
   m_sharedMaterial: {fileID: -7592840547296964328, guid: d3f08b7ea0b464d7690b74e10d8e3b23, type: 2}
@@ -780,7 +779,7 @@ GameObject:
   - component: {fileID: 9022877186973046534}
   - component: {fileID: 6684188353299455687}
   m_Layer: 5
-  m_Name: EnergyTitle
+  m_Name: ApTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -833,7 +832,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Energy cost
+  m_text: ' AP'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d3f08b7ea0b464d7690b74e10d8e3b23, type: 2}
   m_sharedMaterial: {fileID: -7592840547296964328, guid: d3f08b7ea0b464d7690b74e10d8e3b23, type: 2}

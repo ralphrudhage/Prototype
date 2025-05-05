@@ -20,7 +20,7 @@ namespace Managers
         private int discardedSize;
         private const int handSize = 5;
         private int currentSize;
-        private PlayerController player;
+        private Player player;
 
         private Queue<GameAction> queuedActions;
         private readonly List<GameAction> discardedActions = new();
@@ -40,7 +40,7 @@ namespace Managers
 
         private void OnEnable()
         {
-            player = FindAnyObjectByType<PlayerController>();
+            player = FindAnyObjectByType<Player>();
             actionsParent.transform.DestroyTagRecursively("action");
         }
 
@@ -48,18 +48,18 @@ namespace Managers
         {
             var startActions = new List<GameAction>(new GameAction[]
             {
-                new MoveAction(100, 1),
-                new MoveAction(100, 1),
-                new MoveAction(100, 1),
-                new MoveAction(100, 1),
-                new MoveAction(100, 1),
-                new MoveAction(100, 1),
-                new AttackAction(100, 20),
-                new AttackAction(100, 20),
-                new AttackAction(100, 20),
-                new AttackAction(100, 20),
-                new AttackAction(100, 20),
-                new AttackAction(100, 20)
+                new MoveAction(1, 1),
+                new MoveAction(1, 1),
+                new MoveAction(1, 1),
+                new MoveAction(1, 1),
+                new MoveAction(1, 1),
+                new MoveAction(1, 1),
+                new AttackAction(1, 20),
+                new AttackAction(1, 20),
+                new AttackAction(1, 20),
+                new AttackAction(1, 20),
+                new AttackAction(1, 20),
+                new AttackAction(1, 20)
             });
 
             startActions.Shuffle();
@@ -77,7 +77,7 @@ namespace Managers
             yield return new WaitForSeconds(1f);
             currentTurn++;
             turn.text = currentTurn.ToString();
-            player.ResetEnergy();
+            player.ResetAP();
 
             for (int i = 0; i < handSize; i++)
             {

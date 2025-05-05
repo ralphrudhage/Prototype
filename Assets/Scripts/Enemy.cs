@@ -1,34 +1,48 @@
 using System.Collections;
+using System.Collections.Generic;
+using DefaultNamespace;
 using Managers;
+using TMPro;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private GameObject hpPos;
+    [SerializeField] private GameObject infoPos;
     [SerializeField] private GameObject bloodParent;
     [SerializeField] private GameObject bloodPrefab;
 
     private int currentHp;
     private const int maxHp = 100;
+    private const int maxActionPoints = 3;
+    private const int rangedAttack = 6;
+    private const int attackApCost = 2;
+    private int currentAP;
+
+    private const float actionDelay = 0.25f;
 
     public Vector2Int currentGridPos;
     private TextSpawner textSpawner;
     private GameObject healthBar;
-    private PlayerController player;
+    private GameObject infoText;
+    private Player player;
 
     void Start()
     {
         EnemyManager.Instance.RegisterEnemy(this);
+        
+        currentHp = maxHp;
+        currentAP = maxActionPoints;
 
-        player = FindAnyObjectByType<PlayerController>();
+        player = FindAnyObjectByType<Player>();
         textSpawner = FindAnyObjectByType<TextSpawner>();
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         healthBar = textSpawner.SpawnHealthBar();
-
-        currentHp = maxHp;
-
-        UpdateHeathBar();
+        infoText = textSpawner.SpawnInfoText("AP: + " + currentAP, infoPos.transform.position);
+        
+        RefreshEnemyUI();
     }
 
     public void TakeDamage(int damage)
@@ -36,15 +50,18 @@ public class Enemy : MonoBehaviour
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);
         textSpawner.SpawnFloatingText(damage.ToString(), bloodParent.transform.position);
         currentHp -= damage;
-        UpdateHeathBar();
+        RefreshEnemyUI();
         if (currentHp <= 0)
         {
             Debug.LogFormat("ENEMY DIED");
         }
     }
 
-    private void UpdateHeathBar()
+    private void RefreshEnemyUI()
     {
+        infoText.transform.position = Camera.main.WorldToScreenPoint(infoPos.transform.position);
+        infoText.GetComponent<TextMeshProUGUI>().text = $"AP: {currentAP}";
+        
         healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
         healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
@@ -62,40 +79,82 @@ public class Enemy : MonoBehaviour
 
     public IEnumerator TakeTurn()
     {
-        Debug.Log($"Enemy at {currentGridPos} takes turn...");
-
-        // Example: just wait for 0.5 seconds (simulate thinking or animation)
-        yield return new WaitForSeconds(0.5f);
-
-        Vector2Int playerPos = player.currentGridPos;
-        Vector2Int direction = (playerPos - currentGridPos);
-
-        // Normalize to -1/0/1 (basic Manhattan direction)
-        direction.x = Mathf.Clamp(direction.x, -1, 1);
-        direction.y = Mathf.Clamp(direction.y, -1, 1);
-
-        // Try preferred direction first
-        Vector2Int targetPos = currentGridPos + direction;
-
-        if (GridManager.Instance.IsWithinBounds(targetPos))
+        Debug.Log($"Enemy at {currentGridPos} starts turn...");
+        currentAP = maxActionPoints;
+        RefreshEnemyUI();
+        
+        while (currentAP > 0)
         {
-            yield return MoveTo(targetPos);
+            yield return new WaitForSeconds(actionDelay);
+
+            if (CanAttackPlayer())
+            {
+                AttackPlayer();
+                currentAP = 0;
+                break;
+            }
+
+            if (currentAP >= 1)
+            {
+                yield return TryMoveTowardPlayer();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        Debug.Log($"Enemy at {currentGridPos} ends turn.");
+    }
+    
+    private bool CanAttackPlayer()
+    {
+        Vector2Int playerPos = player.currentGridPos;
+
+        var dx = Mathf.Abs(currentGridPos.x - playerPos.x);
+        var dy = Mathf.Abs(currentGridPos.y - playerPos.y);
+        var manhattanDistance = dx + dy;
+
+        var inRange = manhattanDistance <= rangedAttack;
+        var hasLineOfSight = GridManager.Instance.HasLineOfSight(currentGridPos, playerPos);
+
+        return inRange && hasLineOfSight && currentAP >= attackApCost;
+    }
+
+    private IEnumerator TryMoveTowardPlayer()
+    {
+        List<Vector2Int> path = GridManager.Instance.FindPath(currentGridPos, player.currentGridPos);
+
+        if (path.Count > 0)
+        {
+            Vector2Int nextStep = path[0];
+            yield return MoveTo(nextStep);
         }
         else
         {
-            Debug.Log($"Enemy at {currentGridPos} can't move toward player");
-            yield return new WaitForSeconds(0.2f);
+            Debug.Log($"Enemy at {currentGridPos} can't find path to player");
+            currentAP = 0;
+            RefreshEnemyUI();
         }
     }
-
+    
     private IEnumerator MoveTo(Vector2Int targetPos)
     {
         currentGridPos = targetPos;
-        Vector3 worldTarget = GridManager.Instance.GetWorldPosition(targetPos);
+        transform.position = GridManager.Instance.GetWorldPosition(targetPos);
+        currentAP -= 1;
+        RefreshEnemyUI();
+        
+        yield return new WaitForSeconds(actionDelay);
+    }
 
-        // Simple snap movement (replace with animation if you want)
-        transform.position = worldTarget;
-        UpdateHeathBar();
-        yield return new WaitForSeconds(0.2f);
+
+    private void AttackPlayer()
+    {
+        var bullet = Instantiate(projectilePrefab, bloodParent.transform.position, Quaternion.identity);
+        bullet.GetComponent<Projectile>().Initialize(Player.Instance.playerTarget.transform.position);
+        
+        currentAP -= attackApCost;
+        RefreshEnemyUI();
     }
 }

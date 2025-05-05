@@ -2,13 +2,27 @@ using Managers;
 using TMPro;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class Player : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI energyText;
+    [SerializeField] public GameObject playerTarget;
     
     public Vector2Int currentGridPos;
     
-    private int currentEnergy;
+    private int currentAP;
+    
+    public static Player Instance { get; private set; }
+    
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
     
     void Start()
     {
@@ -23,20 +37,20 @@ public class PlayerController : MonoBehaviour
         transform.position = GridManager.Instance.GetWorldPosition(gridPos);
     }
 
-    public void UseEnergy(int energy)
+    public void UseAP(int actionPoint)
     {
-        currentEnergy -= energy;
-        energyText.text = currentEnergy.ToString();
+        currentAP -= actionPoint;
+        energyText.text = currentAP.ToString();
     }
 
     public int GetCurrentEnergy()
     {
-        return currentEnergy;
+        return currentAP;
     }
 
-    public void ResetEnergy()
+    public void ResetAP()
     {
-        currentEnergy = 300;
-        energyText.text = currentEnergy.ToString();
+        currentAP = 3;
+        energyText.text = currentAP.ToString();
     }
 }

@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - action
+  - dirt
+  - PlayerTarget
   layers:
   - Default
   - TransparentFX

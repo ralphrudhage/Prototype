@@ -4,6 +4,8 @@ namespace Managers
 {
     public class GameManager : MonoBehaviour
     {
+        [SerializeField] private GameObject worldSpaceCanvas;
+        
         public static GameManager Instance;
 
         private void Awake()
@@ -17,6 +19,8 @@ namespace Managers
             {
                 Destroy(gameObject);
             }
+
+            worldSpaceCanvas.SetActive(true);
         }
     }
 }
