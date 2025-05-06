@@ -97,7 +97,73 @@ public class Enemy : MonoBehaviour
         int manhattanDistance = dx + dy;
         return manhattanDistance <= range;
     }
+    
+    private bool HasStrictLineOfSight(Vector2Int origin, Vector2Int target)
+    {
+        Vector3 worldStart = GridManager.Instance.GetWorldPosition(origin);
+        Vector3 worldEnd = GridManager.Instance.GetWorldPosition(target);
 
+        Vector3 direction = (worldEnd - worldStart).normalized;
+        float stepSize = 0.1f;
+
+        Vector3 current = worldStart;
+        Vector2Int previousTile = origin;
+        
+        // 🔒 Block direct diagonal LOS if adjacent corners are blocked
+        int dx0 = target.x - origin.x;
+        int dy0 = target.y - origin.y;
+
+        if (Mathf.Abs(dx0) == 1 && Mathf.Abs(dy0) == 1)
+        {
+            Vector2Int corner1 = new Vector2Int(origin.x + dx0, origin.y);
+            Vector2Int corner2 = new Vector2Int(origin.x, origin.y + dy0);
+
+            if (!GridManager.Instance.IsWalkable(corner1) || !GridManager.Instance.IsWalkable(corner2))
+            {
+                Debug.LogWarning($"LOS blocked immediately due to corner clipping between {origin} and {target} via {corner1} & {corner2}");
+                return false;
+            }
+        }
+
+        while (Vector3.Distance(current, worldEnd) > stepSize)
+        {
+            current += direction * stepSize;
+            Vector2Int tile = GridManager.Instance.GetGridPositionFromWorld(current);
+
+            if (tile == origin || tile == target || tile == previousTile)
+                continue;
+
+            if (!GridManager.Instance.IsWithinBounds(tile) || !GridManager.Instance.IsWalkable(tile))
+            {
+                Debug.Log($"LOS blocked at {tile} — not walkable");
+                return false;
+            }
+
+            // Detect diagonal transition from previous tile
+            int dx = tile.x - previousTile.x;
+            int dy = tile.y - previousTile.y;
+
+            if (Mathf.Abs(dx) == 1 && Mathf.Abs(dy) == 1)
+            {
+                Vector2Int check1 = new Vector2Int(previousTile.x + dx, previousTile.y);     // Horizontal neighbor
+                Vector2Int check2 = new Vector2Int(previousTile.x, previousTile.y + dy);     // Vertical neighbor
+
+                if (!GridManager.Instance.IsWalkable(check1) || !GridManager.Instance.IsWalkable(check2))
+                {
+                    Debug.Log($"LOS blocked at {tile} due to corner clipping: {check1}, {check2}");
+                    return false;
+                }
+            }
+
+            previousTile = tile;
+        }
+
+        return true;
+    }
+
+
+
+    /*
     private bool HasStrictLineOfSight(Vector2Int origin, Vector2Int target)
     {
         Vector2Int delta = target - origin;
@@ -164,7 +230,7 @@ public class Enemy : MonoBehaviour
         }
 
         return true;
-    }
+    }*/
 
     
     private void OnDestroy()
@@ -205,28 +271,37 @@ public class Enemy : MonoBehaviour
 
     private IEnumerator TryMoveTowardPlayer()
     {
-        // Step 1: Check adjacent tiles for LOS opportunity
+        if (currentAP <= 0) yield break;
+
+        Vector2Int playerPos = Player.Instance.currentGridPos;
+        Vector2Int? bestMove = null;
+        float bestDistance = float.MaxValue;
+
         foreach (Vector2Int neighbor in GridManager.Instance.GetNeighbors(currentGridPos))
         {
-            if (currentAP <= 0) break;
-
             if (!GridManager.Instance.IsWalkable(neighbor))
                 continue;
 
-            if (HasStrictLineOfSight(neighbor, Player.Instance.currentGridPos))
+            if (HasStrictLineOfSight(neighbor, playerPos))
             {
-                Debug.Log($"Moving to neighbor {neighbor} for LOS");
-                yield return MoveTo(neighbor);
-                yield break;
-            }
-            else
-            {
-                Debug.LogFormat("No LOS from neighbor {0}", neighbor);
+                float distance = Vector2Int.Distance(neighbor, playerPos);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestMove = neighbor;
+                }
             }
         }
 
-        // Step 2: Fallback to normal pathfinding
-        List<Vector2Int> path = GridManager.Instance.FindPath(currentGridPos, Player.Instance.currentGridPos);
+        if (bestMove.HasValue)
+        {
+            Debug.Log($"Moving to {bestMove.Value} for best LOS");
+            yield return MoveTo(bestMove.Value);
+            yield break;
+        }
+
+        // Fallback to normal pathfinding if no LOS found
+        List<Vector2Int> path = GridManager.Instance.FindPath(currentGridPos, playerPos);
 
         if (path.Count == 0)
         {
@@ -245,6 +320,7 @@ public class Enemy : MonoBehaviour
 
         RefreshEnemyUI();
     }
+
 
     private IEnumerator MoveTo(Vector2Int pos)
     {
