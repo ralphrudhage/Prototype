@@ -12,18 +12,21 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject infoPos;
     [SerializeField] private GameObject bloodParent;
     [SerializeField] private GameObject bloodPrefab;
+    
+    public Vector2Int currentGridPos;
 
-    private int currentHp;
     private const int maxHp = 100;
+    private int currentHp;
+    
     private const int maxActionPoints = 3;
+    private int currentAP;
+    
     private const int rangedAttack = 6;
     private const int attackApCost = 2;
     private const int damage = 10;
-    private int currentAP;
 
     private const float actionDelay = 0.25f;
 
-    public Vector2Int currentGridPos;
     private TextSpawner textSpawner;
     private GameObject healthBar;
     private GameObject infoText;
@@ -49,7 +52,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damageTaken)
     {
         Instantiate(bloodPrefab, bloodParent.transform.position, Quaternion.identity);
-        textSpawner.SpawnFloatingText(damage.ToString(), bloodParent.transform.position);
+        textSpawner.SpawnFloatingText(damageTaken.ToString(), bloodParent.transform.position);
         currentHp -= damageTaken;
         RefreshEnemyUI();
         if (currentHp <= 0)
@@ -160,78 +163,6 @@ public class Enemy : MonoBehaviour
 
         return true;
     }
-
-
-
-    /*
-    private bool HasStrictLineOfSight(Vector2Int origin, Vector2Int target)
-    {
-        Vector2Int delta = target - origin;
-        int dx = Mathf.Abs(delta.x);
-        int dy = Mathf.Abs(delta.y);
-        int sx = delta.x > 0 ? 1 : -1;
-        int sy = delta.y > 0 ? 1 : -1;
-
-        int x = origin.x;
-        int y = origin.y;
-        int err = dx - dy;
-
-        bool firstStep = true;
-
-        while (true)
-        {
-            if (x == target.x && y == target.y)
-                break;
-
-            int e2 = 2 * err;
-
-            if (e2 > -dy)
-            {
-                err -= dy;
-                x += sx;
-            }
-
-            if (e2 < dx)
-            {
-                err += dx;
-                y += sy;
-            }
-
-            var current = new Vector2Int(x, y);
-            
-            Debug.DrawLine(GridManager.Instance.GetWorldPosition(origin), GridManager.Instance.GetWorldPosition(target), Color.red, 1.0f);
-            Debug.Log($"LOS Ray visiting tile: {current}");
-
-
-            if (!GridManager.Instance.IsWithinBounds(current) || !GridManager.Instance.IsWalkable(current))
-            {
-                Debug.Log($"LOS blocked directly at {current} — not walkable");
-                return false;
-            }
-
-
-            if (!firstStep && Mathf.Abs(x - origin.x) == Mathf.Abs(y - origin.y))
-            {
-                Vector2Int check1 = new Vector2Int(x, y - sy);
-                Vector2Int check2 = new Vector2Int(x - sx, y);
-                
-                Debug.LogFormat("check1 {0}", check1);
-                Debug.LogFormat("check2 {0}", check2);
-
-                if (!GridManager.Instance.IsWalkable(check1) || !GridManager.Instance.IsWalkable(check2))
-                {
-                    Debug.LogWarning($"LOS blocked at {x},{y} due to BOTH corners blocked:");
-                    return false;
-                }
-            }
-
-
-            firstStep = false; // 👈 moved here to prevent corner logic on first step
-        }
-
-        return true;
-    }*/
-
     
     private void OnDestroy()
     {

@@ -37,7 +37,7 @@ namespace DefaultNamespace
             {
                 if (other.CompareTag("Player"))
                 {
-                    // TODO: Call PlayerController.TakeDamage()
+                    other.gameObject.GetComponent<Player>().TakeDamage(damage);
                     Destroy(gameObject, 0.1f);
                 }
             }

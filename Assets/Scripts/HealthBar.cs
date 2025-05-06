@@ -10,6 +10,11 @@ public class HealthBar : MonoBehaviour
     private void Start() {
         hpFiller.fillAmount = 1f;
     }
+
+    public void BarColor(Color32 color)
+    {
+        hpFiller.color = color;
+    }
     
     public void UpdateHp(float currentHp, float maxHp) {
         hpText.text = currentHp + " / " + maxHp;
