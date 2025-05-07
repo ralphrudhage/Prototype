@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using Model;
 using TMPro;
 using UnityEngine;
@@ -11,21 +10,13 @@ namespace Managers
         [SerializeField] private GameObject actionsParent;
         [SerializeField] private TextMeshProUGUI actionsSizeAmount;
         [SerializeField] private TextMeshProUGUI discardedAmount;
-        [SerializeField] private TextMeshProUGUI turn;
         [SerializeField] private GameObject actionPrefab;
 
+        private Player currentPlayer;
         private SelectedAction currentAction;
         private Enemy currentEnemy;
-
         private int currentTurn;
-        private int discardedSize;
-        private const int handSize = 5;
-        private int currentSize;
-        private Player player;
-
-        private Queue<GameAction> queuedActions;
-        private readonly List<GameAction> discardedActions = new();
-
+        
         public static ActionManager Instance { get; private set; }
 
         private void Awake()
@@ -41,101 +32,35 @@ namespace Managers
 
         private void OnEnable()
         {
-            player = FindAnyObjectByType<Player>();
             actionsParent.transform.DestroyTagRecursively("action");
         }
-
-        private void Start()
+        
+        public void EndTurn()
         {
-            var startActions = new List<GameAction>(new GameAction[]
+            DestroyAllActionsFromUI();
+
+            foreach (var player in PartyManager.Instance.GetAllPlayers())
             {
-                new MoveAction(1, 1),
-                new MoveAction(1, 1),
-                new MoveAction(1, 1),
-                new MoveAction(1, 1),
-                new MoveAction(1, 1),
-                new MoveAction(1, 1),
-                new AttackAction(1, 20),
-                new AttackAction(1, 20),
-                new AttackAction(1, 20),
-                new AttackAction(1, 20),
-                new AttackAction(1, 20),
-                new AttackAction(1, 20)
-            });
-
-            startActions.Shuffle();
-
-            queuedActions = new Queue<GameAction>(startActions);
-
-            actionsSizeAmount.text = queuedActions.Count.ToString();
-            turn.text = "";
-
-            StartCoroutine(SpawnNewActions());
-        }
-
-        private IEnumerator SpawnNewActions()
-        {
-            yield return new WaitForSeconds(1f);
-            currentTurn++;
-            turn.text = currentTurn.ToString();
-            player.ResetAP();
-
-            for (int i = 0; i < handSize; i++)
-            {
-                if (queuedActions.Count == 0 && discardedActions.Count > 0)
+                foreach (var action in player.hand)
                 {
-                    discardedActions.Shuffle();
-                    queuedActions = new Queue<GameAction>(discardedActions);
-                    discardedActions.Clear();
-                    discardedSize = 0;
-                    discardedAmount.text = "0";
+                    player.discarded.Add(action);
+                    Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
                 }
 
-                if (queuedActions.Count > 0)
-                {
-                    SpawnAction();
-                    actionsSizeAmount.text = queuedActions.Count.ToString();
-                    yield return new WaitForSeconds(0.05f);
-                }
+                player.hand.Clear();
             }
+
+            StartCoroutine(PartyManager.Instance.EnemyTurnThenDraw());
         }
-
-        private void SpawnAction()
-        {
-            var action = Instantiate(actionPrefab, actionsParent.transform);
-            action.GetComponent<SelectedAction>().SetUpAction(queuedActions.Dequeue());
-        }
-
-
+        
         // when an action is performed it should be discarded
         public void DiscardSelectedAction(GameAction action)
         {
-            discardedActions.Add(action);
-            discardedSize = discardedActions.Count;
-            discardedAmount.text = discardedSize.ToString();
-        }
-
-        // called from UI when player wants to end the turn, discard unselected actions
-        public void EndTurn()
-        {
-            var unselectedActions = GameObject.FindGameObjectsWithTag("action");
-            foreach (var action in unselectedActions)
-            {
-                DiscardSelectedAction(action.GetComponent<SelectedAction>().gameAction);
-                Destroy(action);
-            }
-
-            // StartCoroutine(SpawnNewActions());
-            StartCoroutine(EnemyTurnThenDraw());
+            var player = PartyManager.Instance.currentPlayer;
+            player.discarded.Add(action);
+            Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
         }
         
-        private IEnumerator EnemyTurnThenDraw()
-        {
-            yield return EnemyManager.Instance.TakeEnemyTurn();
-            yield return StartCoroutine(SpawnNewActions());
-        }
-
-
         // called from UI when action is selected 
         public void SetCurrentAction(SelectedAction action)
         {
@@ -156,10 +81,47 @@ namespace Managers
         {
             if (currentAction == null) return false;
 
+            var actionLogic = currentAction.gameAction;
             currentAction.ConsumeAction();
+
+            currentPlayer = PartyManager.Instance.currentPlayer;
+            currentPlayer.hand.Remove(actionLogic);
+            
+            discardedAmount.text = currentPlayer.discarded.Count.ToString();
+
+            Destroy(currentAction.gameObject);
             currentAction = null;
 
             return true;
+        }
+        
+        private void DestroyAllActionsFromUI()
+        {
+            var unselectedActions = GameObject.FindGameObjectsWithTag("action");
+            foreach (var action in unselectedActions)
+            {
+                Destroy(action);
+            }
+        }
+        
+        public void ShowHandForPlayer(Player player)
+        {
+            Debug.Log($"Showing hand for {player.playerClass} with size {player.hand.Count}");
+            
+            player.SelectedCircle();
+            currentPlayer = player;
+            DestroyAllActionsFromUI();
+            StartCoroutine(ShowHandWithDelay(player));
+        }
+        
+        private IEnumerator ShowHandWithDelay(Player player)
+        {
+            foreach (var action in player.hand)
+            {
+                var go = Instantiate(actionPrefab, actionsParent.transform);
+                go.GetComponent<SelectedAction>().SetUpAction(action);
+                yield return new WaitForSeconds(0.05f);
+            }
         }
     }
 }

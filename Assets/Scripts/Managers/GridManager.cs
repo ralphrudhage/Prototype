@@ -12,7 +12,6 @@ namespace Managers
 
         private readonly List<GameObject> activeCircles = new();
         private readonly Dictionary<Vector2Int, GridCell> gridCells = new();
-        private Player player;
 
         public static GridManager Instance { get; private set; }
 
@@ -29,7 +28,6 @@ namespace Managers
 
         private void OnEnable()
         {
-            player = FindAnyObjectByType<Player>();
             gridCells.Clear();
 
             foreach (var cellPos in gridTilemap.cellBounds.allPositionsWithin)
@@ -155,7 +153,7 @@ namespace Managers
         {
             if (ActionManager.Instance.PerformAction())
             {
-                player.SetGridPosition(gridPos);
+                PartyManager.Instance.currentPlayer.SetGridPosition(gridPos);
                 ClearCircles();
             }
         }

@@ -1,12 +1,14 @@
+using System.Collections.Generic;
 using DefaultNamespace;
 using Managers;
+using Model;
 using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private GameObject playerCircle;
     [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private TextMeshProUGUI energyText;
     [SerializeField] private GameObject hpPos;
     [SerializeField] public GameObject playerTarget;
     [SerializeField] private GameObject bloodPrefab;
@@ -23,42 +25,102 @@ public class Player : MonoBehaviour
     
     private TextSpawner textSpawner;
     private GameObject healthBar;
-    
-    public static Player Instance { get; private set; }
-    
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+    public PlayerClass playerClass;
+    public Queue<GameAction> drawPile = new();
+    public List<GameAction> hand = new();
+    public List<GameAction> discarded = new();
 
-        Instance = this;
+    private void OnEnable()
+    {
+        textSpawner = FindAnyObjectByType<TextSpawner>();
+        healthBar = textSpawner.SpawnHealthBar();
+        healthBar.GetComponent<HealthBar>().BarColor(GameUtils.lightBlue);
+        
+        InitializeDeck();
     }
-    
+
     void Start()
     {
         currentHp = maxHp;
         currentAP = maxActionPoints;
         
-        textSpawner = FindAnyObjectByType<TextSpawner>();
-        healthBar = textSpawner.SpawnHealthBar();
-        healthBar.GetComponent<HealthBar>().BarColor(GameUtils.lightBlue);
-        
-        energyText.text = "";
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         
         RefreshPlayerUI();
         
-        Debug.Log($"Player set at {currentGridPos}");
+        Debug.Log($"{playerClass} set at {currentGridPos}");
     }
+    
+    private void InitializeDeck()
+    {
+        List<GameAction> actions = new();
 
+        switch (playerClass)
+        {
+            case PlayerClass.WARRIOR:
+                actions.AddRange(new GameAction[]
+                {
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20)
+                });
+                break;
+
+            case PlayerClass.MAGE:
+                actions.AddRange(new GameAction[]
+                {
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20)
+                });
+                break;
+
+            case PlayerClass.PRIEST:
+                actions.AddRange(new GameAction[]
+                {
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new MoveAction(1, 1),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20),
+                    new AttackAction(1, 20)
+                });
+                break;
+        }
+
+        actions.Shuffle();
+        drawPile = new Queue<GameAction>(actions);
+    }
+    
     private void RefreshPlayerUI()
     {
         healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
+        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp, currentAP);
     }
     
     public void TakeDamage(int damageTaken)
@@ -69,7 +131,7 @@ public class Player : MonoBehaviour
         RefreshPlayerUI();
         if (currentHp <= 0)
         {
-            Debug.LogFormat("PLAYER DIED");
+            Debug.Log($"{playerClass} DIED");
         }
     }
     
@@ -79,13 +141,13 @@ public class Player : MonoBehaviour
         transform.position = GridManager.Instance.GetWorldPosition(gridPos);
         RefreshPlayerUI();
         
-        Debug.Log($"Player set at {currentGridPos}");
+        Debug.Log($"{playerClass} set at {currentGridPos}");
     }
 
     public void UseAP(int actionPoint)
     {
         currentAP -= actionPoint;
-        energyText.text = currentAP.ToString();
+        RefreshPlayerUI();
     }
 
     public int GetCurrentAP()
@@ -101,12 +163,25 @@ public class Player : MonoBehaviour
     public void ResetAP()
     {
         currentAP = 3;
-        energyText.text = currentAP.ToString();
+        RefreshPlayerUI();
     }
 
     public void AttackEnemy(Vector2 enemyPosition, int damage)
     {
         var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
         bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage, true);
+    }
+    
+    private void OnMouseDown()
+    {
+        PartyManager.Instance.SetCurrentPlayer(this);
+        Debug.Log($"{playerClass} selected");
+    }
+
+    public void SelectedCircle()
+    {
+        var circles = GameObject.FindGameObjectsWithTag("circle");
+        foreach (var circle in circles) circle.SetActive(false);
+        playerCircle.SetActive(true);
     }
 }

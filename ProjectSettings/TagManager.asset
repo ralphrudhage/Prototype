@@ -8,6 +8,7 @@ TagManager:
   - dirt
   - PlayerTarget
   - Enemy
+  - circle
   layers:
   - Default
   - TransparentFX

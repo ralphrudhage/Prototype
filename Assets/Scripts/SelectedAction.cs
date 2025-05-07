@@ -13,12 +13,10 @@ public class SelectedAction : MonoBehaviour
     private CursorManager cursorManager;
     private Enemy enemy;
     private bool isSelected;
-    private ActionManager actionManager;
 
     private void Start()
     {
         cursorManager = FindAnyObjectByType<CursorManager>();
-        actionManager = FindAnyObjectByType<ActionManager>();
     }
 
     public void SetUpAction(GameAction selectedAction)
@@ -40,7 +38,7 @@ public class SelectedAction : MonoBehaviour
 
     public void InitAction()
     {
-        if (Player.Instance.GetCurrentAP() >= gameAction.cost)
+        if (PartyManager.Instance.currentPlayer.GetCurrentAP() >= gameAction.cost)
         {
             ActionManager.Instance.SetCurrentAction(this);
             isSelected = true;
@@ -48,7 +46,7 @@ public class SelectedAction : MonoBehaviour
             switch (gameAction)
             {
                 case MoveAction action:
-                    GridManager.Instance.ShowMoveCircles(Player.Instance.currentGridPos, action.range);
+                    GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, action.range);
                     break;
 
                 case AttackAction:
@@ -69,16 +67,19 @@ public class SelectedAction : MonoBehaviour
         switch (gameAction)
         {
             case MoveAction:
+                // Movement logic goes here
                 break;
 
             case AttackAction action:
-                Player.Instance.AttackEnemy(actionManager.GetCurrentEnemy().targetPos, action.damage);
+                PartyManager.Instance.currentPlayer.AttackEnemy(
+                    ActionManager.Instance.GetCurrentEnemy().targetPos,
+                    action.damage
+                );
                 cursorManager.SetCrossHair();
                 break;
         }
-        
-        Player.Instance.UseAP(gameAction.cost);
+
+        PartyManager.Instance.currentPlayer.UseAP(gameAction.cost);
         ActionManager.Instance.DiscardSelectedAction(gameAction);
-        Destroy(gameObject);
     }
 }
