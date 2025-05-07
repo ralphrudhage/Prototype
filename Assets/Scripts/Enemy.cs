@@ -76,8 +76,8 @@ public class Enemy : MonoBehaviour
     {
         if (!IsTargetableByPlayer()) return;
 
-        ActionManager.Instance.SetCurrentEnemy(this);
-        ActionManager.Instance.PerformAction();
+        CardManager.Instance.SetCurrentEnemy(this);
+        CardManager.Instance.PerformAction();
     }
 
     private bool IsTargetableByPlayer()

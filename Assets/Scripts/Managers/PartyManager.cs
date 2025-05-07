@@ -69,7 +69,7 @@ namespace Managers
                 PlayerUI.Instance.UpdatePlayerUI(player);
             }
 
-            ActionManager.Instance.ShowHandForPlayer(player);
+            CardManager.Instance.ShowHandForPlayer(player);
         }
         
         private void DrawHand(Player player)
@@ -79,7 +79,7 @@ namespace Managers
                 if (player.drawPile.Count == 0 && player.discarded.Count > 0)
                 {
                     player.discarded.Shuffle();
-                    player.drawPile = new Queue<GameAction>(player.discarded);
+                    player.drawPile = new Queue<Card>(player.discarded);
                     player.discarded.Clear();
                 }
 

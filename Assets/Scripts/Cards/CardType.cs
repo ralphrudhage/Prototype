@@ -1,6 +1,6 @@
 namespace Model
 {
-    public enum ActionType
+    public enum CardType
     {
         ATTACK,
         MOVE,

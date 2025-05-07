@@ -151,7 +151,7 @@ namespace Managers
 
         public void OnHighlightTileClicked(Vector2Int gridPos)
         {
-            if (ActionManager.Instance.PerformAction())
+            if (CardManager.Instance.PerformAction())
             {
                 PartyManager.Instance.currentPlayer.SetGridPosition(gridPos);
                 ClearCircles();

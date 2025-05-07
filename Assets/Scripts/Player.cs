@@ -26,9 +26,9 @@ public class Player : MonoBehaviour
     private TextSpawner textSpawner;
     private GameObject healthBar;
     public PlayerClass playerClass;
-    public Queue<GameAction> drawPile = new();
-    public List<GameAction> hand = new();
-    public List<GameAction> discarded = new();
+    public Queue<Card> drawPile = new();
+    public List<Card> hand = new();
+    public List<Card> discarded = new();
 
     private void OnEnable()
     {
@@ -54,67 +54,67 @@ public class Player : MonoBehaviour
     
     private void InitializeDeck()
     {
-        List<GameAction> actions = new();
+        List<Card> actions = new();
 
         switch (playerClass)
         {
             case PlayerClass.WARRIOR:
-                actions.AddRange(new GameAction[]
+                actions.AddRange(new Card[]
                 {
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20)
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20)
                 });
                 break;
 
             case PlayerClass.MAGE:
-                actions.AddRange(new GameAction[]
+                actions.AddRange(new Card[]
                 {
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20)
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20)
                 });
                 break;
 
             case PlayerClass.PRIEST:
-                actions.AddRange(new GameAction[]
+                actions.AddRange(new Card[]
                 {
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new MoveAction(1, 1),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20),
-                    new AttackAction(1, 20)
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new MoveCard(1, 1),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20),
+                    new AttackCard(1, 20)
                 });
                 break;
         }
 
         actions.Shuffle();
-        drawPile = new Queue<GameAction>(actions);
+        drawPile = new Queue<Card>(actions);
     }
     
     private void RefreshPlayerUI()

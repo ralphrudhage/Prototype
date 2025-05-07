@@ -5,19 +5,17 @@ using UnityEngine;
 
 namespace Managers
 {
-    public class ActionManager : MonoBehaviour
+    public class CardManager : MonoBehaviour
     {
         [SerializeField] private GameObject actionsParent;
-        [SerializeField] private TextMeshProUGUI actionsSizeAmount;
-        [SerializeField] private TextMeshProUGUI discardedAmount;
         [SerializeField] private GameObject actionPrefab;
 
         private Player currentPlayer;
-        private SelectedAction currentAction;
+        private SelectedCard currentCard;
         private Enemy currentEnemy;
         private int currentTurn;
         
-        public static ActionManager Instance { get; private set; }
+        public static CardManager Instance { get; private set; }
 
         private void Awake()
         {
@@ -37,7 +35,7 @@ namespace Managers
         
         public void EndTurn()
         {
-            DestroyAllActionsFromUI();
+            DestroyAllCardsFromUI();
 
             foreach (var player in PartyManager.Instance.GetAllPlayers())
             {
@@ -54,18 +52,16 @@ namespace Managers
             StartCoroutine(PartyManager.Instance.EnemyTurnThenDraw());
         }
         
-        // when an action is performed it should be discarded
-        public void DiscardSelectedAction(GameAction action)
+        public void DiscardSelectedCard(Card action)
         {
             var player = PartyManager.Instance.currentPlayer;
             player.discarded.Add(action);
             Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
         }
         
-        // called from UI when action is selected 
-        public void SetCurrentAction(SelectedAction action)
+        public void SetCurrentAction(SelectedCard card)
         {
-            currentAction = action;
+            currentCard = card;
         }
 
         public void SetCurrentEnemy(Enemy enemy)
@@ -80,23 +76,21 @@ namespace Managers
 
         public bool PerformAction()
         {
-            if (currentAction == null) return false;
+            if (currentCard == null) return false;
 
-            var actionLogic = currentAction.gameAction;
-            currentAction.ConsumeAction();
+            var actionLogic = currentCard.Card;
+            currentCard.ConsumeCard();
 
             currentPlayer = PartyManager.Instance.currentPlayer;
             currentPlayer.hand.Remove(actionLogic);
-            
-            discardedAmount.text = currentPlayer.discarded.Count.ToString();
 
-            Destroy(currentAction.gameObject);
-            currentAction = null;
+            Destroy(currentCard.gameObject);
+            currentCard = null;
 
             return true;
         }
         
-        private void DestroyAllActionsFromUI()
+        private void DestroyAllCardsFromUI()
         {
             var unselectedActions = GameObject.FindGameObjectsWithTag("action");
             foreach (var action in unselectedActions)
@@ -111,7 +105,7 @@ namespace Managers
             
             player.SelectedCircle();
             currentPlayer = player;
-            DestroyAllActionsFromUI();
+            DestroyAllCardsFromUI();
             StartCoroutine(ShowHandWithDelay(player));
         }
         
@@ -120,7 +114,7 @@ namespace Managers
             foreach (var action in player.hand)
             {
                 var go = Instantiate(actionPrefab, actionsParent.transform);
-                go.GetComponent<SelectedAction>().SetUpAction(action);
+                go.GetComponent<SelectedCard>().SetUpCard(action);
                 yield return new WaitForSeconds(0.05f);
             }
         }

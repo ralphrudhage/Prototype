@@ -3,13 +3,13 @@ using Model;
 using TMPro;
 using UnityEngine;
 
-public class SelectedAction : MonoBehaviour
+public class SelectedCard : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI actionText;
     [SerializeField] private TextMeshProUGUI energyText;
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private TextMeshProUGUI infoValue;
-    public GameAction gameAction;
+    public Card Card;
     private CursorManager cursorManager;
     private Enemy enemy;
     private bool isSelected;
@@ -19,37 +19,37 @@ public class SelectedAction : MonoBehaviour
         cursorManager = FindAnyObjectByType<CursorManager>();
     }
 
-    public void SetUpAction(GameAction selectedAction)
+    public void SetUpCard(Card selectedAction)
     {
-        gameAction = selectedAction;
+        Card = selectedAction;
         
-        actionText.text = gameAction.type == ActionType.MOVE ? "Move" : "Attack";
-        energyText.text = gameAction.cost.ToString();
+        actionText.text = Card.type == CardType.MOVE ? "Move" : "Attack";
+        energyText.text = Card.cost.ToString();
 
-        infoText.text = gameAction.type == ActionType.MOVE ? "Range" : "Damage";
+        infoText.text = Card.type == CardType.MOVE ? "Range" : "Damage";
 
-        infoValue.text = gameAction switch
+        infoValue.text = Card switch
         {
-            MoveAction action => action.range.ToString(),
-            AttackAction action => action.damage.ToString(),
+            MoveCard action => action.range.ToString(),
+            AttackCard action => action.damage.ToString(),
             _ => infoValue.text
         };
     }
 
-    public void InitAction()
+    public void InitCard()
     {
-        if (PartyManager.Instance.currentPlayer.GetCurrentAP() >= gameAction.cost)
+        if (PartyManager.Instance.currentPlayer.GetCurrentAP() >= Card.cost)
         {
-            ActionManager.Instance.SetCurrentAction(this);
+            CardManager.Instance.SetCurrentAction(this);
             isSelected = true;
 
-            switch (gameAction)
+            switch (Card)
             {
-                case MoveAction action:
+                case MoveCard action:
                     GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, action.range);
                     break;
 
-                case AttackAction:
+                case AttackCard:
                     cursorManager.SetCrossHair();
                     break;
             }
@@ -60,26 +60,26 @@ public class SelectedAction : MonoBehaviour
         }
     }
     
-    public void ConsumeAction()
+    public void ConsumeCard()
     {
         if (!isSelected) return;
 
-        switch (gameAction)
+        switch (Card)
         {
-            case MoveAction:
+            case MoveCard:
                 // Movement logic goes here
                 break;
 
-            case AttackAction action:
+            case AttackCard action:
                 PartyManager.Instance.currentPlayer.AttackEnemy(
-                    ActionManager.Instance.GetCurrentEnemy().targetPos,
+                    CardManager.Instance.GetCurrentEnemy().targetPos,
                     action.damage
                 );
                 cursorManager.SetCrossHair();
                 break;
         }
 
-        PartyManager.Instance.currentPlayer.UseAP(gameAction.cost);
-        ActionManager.Instance.DiscardSelectedAction(gameAction);
+        PartyManager.Instance.currentPlayer.UseAP(Card.cost);
+        CardManager.Instance.DiscardSelectedCard(Card);
     }
 }

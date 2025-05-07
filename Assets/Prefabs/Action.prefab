@@ -427,7 +427,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2895250847716969173}
         m_TargetAssemblyTypeName: SelectedAction, Assembly-CSharp
-        m_MethodName: InitAction
+        m_MethodName: InitCard
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
