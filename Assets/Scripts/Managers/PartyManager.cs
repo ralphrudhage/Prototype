@@ -42,15 +42,37 @@ namespace Managers
             {
                 player.ResetAP();
                 player.hand.Clear();
-                DrawInitialHandForPlayer(player);
+                // DrawInitialHandForPlayer(player);
             }
 
-            currentPlayerIndex = 0;
-            
-            ActionManager.Instance.ShowHandForPlayer(currentPlayer);
+            currentPlayerIndex = -1;
+            // currentPlayerIndex = 0;
+            // ActionManager.Instance.ShowHandForPlayer(currentPlayer);
         }
         
-        private void DrawInitialHandForPlayer(Player player)
+        public IEnumerator EnemyTurnThenDraw()
+        {
+            yield return EnemyManager.Instance.TakeEnemyTurn();
+            StartPlayerTurn();
+        }
+        
+        public void SetCurrentPlayer(Player player)
+        {
+            int index = playerUnits.IndexOf(player);
+            if (index == -1) return;
+
+            currentPlayerIndex = index;
+            
+            if (player.hand.Count == 0)
+            {
+                DrawHand(player);
+                PlayerUI.Instance.UpdatePlayerUI(player);
+            }
+
+            ActionManager.Instance.ShowHandForPlayer(player);
+        }
+        
+        private void DrawHand(Player player)
         {
             for (int i = 0; i < 5; i++)
             {
@@ -67,22 +89,6 @@ namespace Managers
                     player.hand.Add(action);
                 }
             }
-        }
-        
-        public IEnumerator EnemyTurnThenDraw()
-        {
-            yield return EnemyManager.Instance.TakeEnemyTurn();
-            StartPlayerTurn();
-        }
-        
-        public void SetCurrentPlayer(Player player)
-        {
-            int index = playerUnits.IndexOf(player);
-            if (index == -1) return;
-
-            currentPlayerIndex = index;
-            
-            ActionManager.Instance.ShowHandForPlayer(player);
         }
         
         public List<Player> GetAllPlayers()

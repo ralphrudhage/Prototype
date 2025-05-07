@@ -1,4 +1,3 @@
-using System;
 using Model;
 using TMPro;
 using UnityEngine;

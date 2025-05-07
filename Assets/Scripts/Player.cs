@@ -186,4 +186,9 @@ public class Player : MonoBehaviour
         foreach (var circle in circles) circle.SetActive(false);
         playerCircle.SetActive(true);
     }
+
+    public void Deselect()
+    {
+        playerCircle.SetActive(false);
+    }
 }

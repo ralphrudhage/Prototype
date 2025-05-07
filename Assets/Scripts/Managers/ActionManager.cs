@@ -47,6 +47,7 @@ namespace Managers
                     Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
                 }
 
+                player.Deselect();
                 player.hand.Clear();
             }
 
