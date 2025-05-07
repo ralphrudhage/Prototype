@@ -44,6 +44,7 @@ public class Enemy : MonoBehaviour
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         healthBar = textSpawner.SpawnHealthBar();
+        infoText = textSpawner.SpawnInfoText("AP: + " + currentAP, infoPos.transform.position);
 
         RefreshEnemyUI();
     }
@@ -64,8 +65,11 @@ public class Enemy : MonoBehaviour
     {
         targetPos = bloodParent.transform.position;
         
+        infoText.transform.position = Camera.main.WorldToScreenPoint(infoPos.transform.position);
+        infoText.GetComponent<TextMeshProUGUI>().text = $"AP: {currentAP}";
+        
         healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp, currentAP);
+        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
 
     private void OnMouseDown()

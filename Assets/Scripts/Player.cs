@@ -119,8 +119,10 @@ public class Player : MonoBehaviour
     
     private void RefreshPlayerUI()
     {
+        PlayerUI.Instance.UpdatePlayerUI(this);
+        
         healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp, currentAP);
+        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
     
     public void TakeDamage(int damageTaken)
