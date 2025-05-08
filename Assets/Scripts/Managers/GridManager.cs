@@ -14,6 +14,7 @@ namespace Managers
         private readonly Dictionary<Vector2Int, GridCell> gridCells = new();
 
         public static GridManager Instance { get; private set; }
+        private HashSet<Vector2Int> validMoveTiles = new();
 
         private void Awake()
         {
@@ -42,6 +43,11 @@ namespace Managers
                 gridCells[gridPos] = new GridCell(gridPos, walkable: true);
             }
         }
+        
+        public bool IsValidMoveTile(Vector2Int pos)
+        {
+            return validMoveTiles.Contains(pos);
+        }
 
         public bool IsWithinBounds(Vector2Int gridPos)
         {
@@ -63,6 +69,7 @@ namespace Managers
         public void ShowMoveCircles(Vector2Int from, int range)
         {
             ClearCircles();
+            validMoveTiles.Clear();
 
             Vector2Int[] directions =
             {
@@ -93,7 +100,8 @@ namespace Managers
                         if (!gridCells.ContainsKey(horizontal) || !gridCells.ContainsKey(vertical))
                             break; // skip and stop stepping further in this diagonal
                     }
-
+                    
+                    validMoveTiles.Add(target);
                     Vector3 worldPos = GetWorldPosition(target);
                     GameObject circle = Instantiate(circlePrefab, worldPos, Quaternion.identity);
                     circle.GetComponent<SelectCell>().Init(target);

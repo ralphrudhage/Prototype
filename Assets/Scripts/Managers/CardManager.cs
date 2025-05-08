@@ -78,7 +78,7 @@ namespace Managers
         {
             if (currentCard == null) return false;
 
-            var actionLogic = currentCard.Card;
+            var actionLogic = currentCard.card;
             currentCard.ConsumeCard();
 
             currentPlayer = PartyManager.Instance.currentPlayer;

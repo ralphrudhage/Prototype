@@ -11,7 +11,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     [SerializeField] private TextMeshProUGUI energyText;
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private TextMeshProUGUI infoValue;
-    public Card Card;
+    public Card card;
     private CursorManager cursorManager;
     private Enemy enemy;
     private bool isSelected;
@@ -28,14 +28,14 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     public void SetUpCard(Card selectedAction)
     {
-        Card = selectedAction;
+        card = selectedAction;
 
-        actionText.text = Card.type == CardType.MOVE ? "Move" : "Attack";
-        energyText.text = Card.cost.ToString();
+        actionText.text = card.type == CardType.MOVE ? "Move" : "Attack";
+        energyText.text = card.cost.ToString();
 
-        infoText.text = Card.type == CardType.MOVE ? "Range" : "Damage";
+        infoText.text = card.type == CardType.MOVE ? "Range" : "Damage";
 
-        infoValue.text = Card switch
+        infoValue.text = card switch
         {
             MoveCard action => action.range.ToString(),
             AttackCard action => action.damage.ToString(),
@@ -45,12 +45,10 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     public void ConsumeCard()
     {
-        if (!isSelected) return;
-
-        switch (Card)
+        switch (card)
         {
             case MoveCard:
-                // Movement logic goes here
+                GridManager.Instance.ClearCircles();
                 break;
 
             case AttackCard action:
@@ -62,13 +60,14 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                 break;
         }
 
-        PartyManager.Instance.currentPlayer.UseAP(Card.cost);
-        CardManager.Instance.DiscardSelectedCard(Card);
+        PartyManager.Instance.currentPlayer.UseAP(card.cost);
+        CardManager.Instance.DiscardSelectedCard(card);
+        Destroy(gameObject);
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (PartyManager.Instance.currentPlayer.GetCurrentAP() < Card.cost) return;
+        if (PartyManager.Instance.currentPlayer.GetCurrentAP() < card.cost) return;
 
         originalPosition = transform.position;
         isDragging = true;
@@ -77,7 +76,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         
         cardImage.color = new Color(cardImage.color.r, cardImage.color.g, cardImage.color.b, 0.5f);
 
-        switch (Card)
+        switch (card)
         {
             case MoveCard move:
                 GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, move.range);
@@ -116,8 +115,23 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private bool CanConsume()
     {
-        // TODO: Replace this with proper validation:
-        // E.g., is over a valid target (enemy, tile, etc.)
+        if (card is MoveCard)
+        {
+            Vector3 droppedWorldPos = transform.position;
+            Vector2Int droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
+        
+            bool canMove = GridManager.Instance.IsValidMoveTile(droppedGridPos);
+            if (canMove)
+            {
+                PartyManager.Instance.currentPlayer.SetGridPosition(droppedGridPos);
+                return true;
+            }
+
+            return false;
+        }
+
+        // Add future checks for AttackCard, etc.
         return false;
     }
+
 }
