@@ -103,7 +103,7 @@ namespace Managers
         }
 
 
-        private void ClearCircles()
+        public void ClearCircles()
         {
             foreach (var obj in activeCircles)
             {
