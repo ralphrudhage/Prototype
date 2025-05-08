@@ -11,7 +11,7 @@ public class TextSpawner : MonoBehaviour
     public void SpawnFloatingText(string param, Vector3 worldPosition)
     {
         var gameLabel = Instantiate(textPrefab, canvasParent);
-        gameLabel.transform.position = Camera.main.WorldToScreenPoint(worldPosition);
+        gameLabel.transform.position = worldPosition;
 
         var text = gameLabel.GetComponent<TextMeshProUGUI>();
         text.text = param;
@@ -22,7 +22,7 @@ public class TextSpawner : MonoBehaviour
     public GameObject SpawnInfoText(string param, Vector3 worldPosition)
     {
         var gameLabel = Instantiate(infoTextPrefab, canvasParent);
-        gameLabel.transform.position = Camera.main.WorldToScreenPoint(worldPosition);
+        gameLabel.transform.position = worldPosition;
 
         var text = gameLabel.GetComponent<TextMeshProUGUI>();
         text.text = param;

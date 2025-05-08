@@ -65,10 +65,10 @@ public class Enemy : MonoBehaviour
     {
         targetPos = bloodParent.transform.position;
         
-        infoText.transform.position = Camera.main.WorldToScreenPoint(infoPos.transform.position);
+        infoText.transform.position = infoPos.transform.position;
         infoText.GetComponent<TextMeshProUGUI>().text = $"AP: {currentAP}";
         
-        healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
+        healthBar.transform.position = hpPos.transform.position;
         healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
 

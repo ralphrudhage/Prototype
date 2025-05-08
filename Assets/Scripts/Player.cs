@@ -121,7 +121,7 @@ public class Player : MonoBehaviour
     {
         PlayerUI.Instance.UpdatePlayerUI(this);
         
-        healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
+        healthBar.transform.position = hpPos.transform.position;
         healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
     
