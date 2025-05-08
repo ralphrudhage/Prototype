@@ -13,8 +13,6 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     [SerializeField] private TextMeshProUGUI infoValue;
     public Card card;
     private CursorManager cursorManager;
-    private Enemy enemy;
-    private bool isSelected;
 
     private Vector3 originalPosition;
     private bool isDragging;
@@ -56,7 +54,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                     CardManager.Instance.GetCurrentEnemy().targetPos,
                     action.damage
                 );
-                cursorManager.SetCrossHair();
+                // cursorManager.SetCrossHair();
                 break;
         }
 
@@ -71,7 +69,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         originalPosition = transform.position;
         isDragging = true;
-        isSelected = true;
+        
         CardManager.Instance.SetCurrentAction(this);
         
         cardImage.color = new Color(cardImage.color.r, cardImage.color.g, cardImage.color.b, 0.5f);
@@ -83,7 +81,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                 break;
 
             case AttackCard:
-                cursorManager.SetCrossHair();
+                // cursorManager.SetCrossHair();
                 break;
         }
     }
@@ -115,9 +113,10 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private bool CanConsume()
     {
+        Vector3 droppedWorldPos = transform.position;
+        
         if (card is MoveCard)
         {
-            Vector3 droppedWorldPos = transform.position;
             Vector2Int droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
         
             bool canMove = GridManager.Instance.IsValidMoveTile(droppedGridPos);
@@ -128,6 +127,27 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             }
 
             return false;
+        }
+        
+        if (card is AttackCard)
+        {
+            Collider2D hit = Physics2D.OverlapPoint(droppedWorldPos);
+            if (hit != null && hit.TryGetComponent<Enemy>(out var enemy))
+            {
+                Vector2Int enemyPos = enemy.currentGridPos;
+                Vector2Int playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
+                int range = PartyManager.Instance.currentPlayer.GetCurrentRange();
+
+                int dx = Mathf.Abs(enemyPos.x - playerPos.x);
+                int dy = Mathf.Abs(enemyPos.y - playerPos.y);
+                int manhattanDistance = dx + dy;
+
+                if (manhattanDistance <= range)
+                {
+                    CardManager.Instance.SetCurrentEnemy(enemy); // Set this so ConsumeCard can use it
+                    return true;
+                }
+            }
         }
 
         // Add future checks for AttackCard, etc.
