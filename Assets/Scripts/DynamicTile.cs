@@ -1,17 +1,24 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class DynamicTile : MonoBehaviour
 {
+    [SerializeField] private Sprite whiteSprite;
     [SerializeField] private GameObject highLight;
     [SerializeField] private List<Sprite> dynamicSprites;
+    
     private SpriteRenderer spriteRenderer;
+    private Sprite startingSprite;
+    private Transform originalPosition;
 
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = PickBiasedSprite();
+        startingSprite = PickBiasedSprite();
+        spriteRenderer.sprite = startingSprite;
         highLight.SetActive(false);
+        originalPosition = transform;
     }
 
     private Sprite PickBiasedSprite()
@@ -30,6 +37,34 @@ public class DynamicTile : MonoBehaviour
     public void SetHighlight(bool isHighlighted)
     {
         highLight.SetActive(isHighlighted);
+    }
+
+    public void WhiteTile()
+    {
+        spriteRenderer.sprite = whiteSprite;
+        spriteRenderer.color = Color.white;
+    }
+
+    public void StartingTile()
+    {
+        spriteRenderer.sprite = startingSprite;
+        spriteRenderer.color = Color.white;
+        transform.position = originalPosition.position;
+    }
+    
+    public void ColorTile(Color32 color)
+    {
+        spriteRenderer.color = color;
+    }
+    
+    public SpriteRenderer GetSpriteRenderer()
+    {
+        return spriteRenderer;
+    }
+
+    public Transform GetOriginalPosition()
+    {
+        return originalPosition;
     }
 }
 
