@@ -1,20 +1,16 @@
 using System.Collections.Generic;
 using Model;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace Managers
 {
     public class GridManager : MonoBehaviour
     {
-        [SerializeField] private Tilemap gridTilemap;
-        [SerializeField] private GameObject circlePrefab;
-
-        private readonly List<GameObject> activeCircles = new();
         private readonly Dictionary<Vector2Int, GridCell> gridCells = new();
+        private readonly Dictionary<Vector2Int, DynamicTile> dynamicTiles = new();
 
         public static GridManager Instance { get; private set; }
-        private HashSet<Vector2Int> validMoveTiles = new();
+        private readonly HashSet<Vector2Int> validMoveTiles = new();
 
         private void Awake()
         {
@@ -31,17 +27,22 @@ namespace Managers
         {
             gridCells.Clear();
 
-            foreach (var cellPos in gridTilemap.cellBounds.allPositionsWithin)
+            foreach (var tile in FindObjectsByType<DynamicTile>(FindObjectsSortMode.None))
             {
-                if (!gridTilemap.HasTile(cellPos)) continue;
+                Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(tile.transform.position.x), Mathf.RoundToInt(tile.transform.position.y));
 
-                var gridPos = new Vector2Int(cellPos.x, cellPos.y);
-                if (gridPos.y == 0)
+                if (!gridCells.ContainsKey(gridPos))
                 {
-                    // Debug.Log($"Adding walkable tile: {gridPos}");
+                    gridCells[gridPos] = new GridCell(gridPos, walkable: true);
+                    dynamicTiles[gridPos] = tile;
                 }
-                gridCells[gridPos] = new GridCell(gridPos, walkable: true);
+                else
+                {
+                    Debug.LogWarning($"Duplicate tile at grid position {gridPos}, skipping.");
+                }
             }
+            
+            Debug.Log($"Grid initialized with {gridCells.Count} walkable tiles.");
         }
         
         public bool IsValidMoveTile(Vector2Int pos)
@@ -56,19 +57,17 @@ namespace Managers
 
         public Vector3 GetWorldPosition(Vector2Int gridPos)
         {
-            return gridTilemap.GetCellCenterWorld((Vector3Int)gridPos);
+            return new Vector3(gridPos.x, gridPos.y, 0f);
         }
 
         public Vector2Int GetGridPositionFromWorld(Vector3 worldPos)
         {
-            var cellPos = gridTilemap.WorldToCell(worldPos);
-            return new Vector2Int(cellPos.x, cellPos.y);
+            return new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.y));
         }
-
-
+        
         public void ShowMoveCircles(Vector2Int from, int range)
         {
-            ClearCircles();
+            ClearHighlights();
             validMoveTiles.Clear();
 
             Vector2Int[] directions =
@@ -89,38 +88,31 @@ namespace Managers
 
                     if (!gridCells.ContainsKey(target)) break;
 
-                    // Block diagonal moves through corners
                     bool isDiagonal = Mathf.Abs(dir.x) + Mathf.Abs(dir.y) == 2;
 
                     if (isDiagonal)
                     {
-                        Vector2Int horizontal = new Vector2Int(from.x + dir.x, from.y);
-                        Vector2Int vertical = new Vector2Int(from.x, from.y + dir.y);
+                        Vector2Int horizontal = new(from.x + dir.x, from.y);
+                        Vector2Int vertical = new(from.x, from.y + dir.y);
 
                         if (!gridCells.ContainsKey(horizontal) || !gridCells.ContainsKey(vertical))
-                            break; // skip and stop stepping further in this diagonal
+                            break;
                     }
-                    
+
                     validMoveTiles.Add(target);
-                    Vector3 worldPos = GetWorldPosition(target);
-                    GameObject circle = Instantiate(circlePrefab, worldPos, Quaternion.identity);
-                    circle.GetComponent<SelectCell>().Init(target);
-                    activeCircles.Add(circle);
+
+                    if (dynamicTiles.TryGetValue(target, out var tile))
+                        tile.SetHighlight(true);
                 }
             }
         }
-
-
-        public void ClearCircles()
+        
+        public void ClearHighlights()
         {
-            foreach (var obj in activeCircles)
-            {
-                Destroy(obj);
-            }
-
-            activeCircles.Clear();
+            foreach (var tile in dynamicTiles.Values)
+                tile.SetHighlight(false);
         }
-
+        
         public bool HasLineOfSight(Vector2Int from, Vector2Int to)
         {
             Vector2 direction = (to - from);
@@ -162,7 +154,7 @@ namespace Managers
             if (CardManager.Instance.PerformAction())
             {
                 PartyManager.Instance.currentPlayer.SetGridPosition(gridPos);
-                ClearCircles();
+                ClearHighlights();
             }
         }
 

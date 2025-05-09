@@ -46,7 +46,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         switch (card)
         {
             case MoveCard:
-                GridManager.Instance.ClearCircles();
+                GridManager.Instance.ClearHighlights();
                 break;
 
             case AttackCard action:
@@ -106,7 +106,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         else
         {
             cardImage.color = new Color(cardImage.color.r, cardImage.color.g, cardImage.color.b, 1f);
-            GridManager.Instance.ClearCircles();
+            GridManager.Instance.ClearHighlights();
             transform.position = originalPosition;
         }
     }
