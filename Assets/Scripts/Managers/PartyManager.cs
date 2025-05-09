@@ -8,6 +8,7 @@ namespace Managers
 {
     public class PartyManager : MonoBehaviour
     {
+        [SerializeField] private TextMeshProUGUI turnTitle;
         [SerializeField] private TextMeshProUGUI turn;
         [SerializeField] private List<Player> playerUnits;
         private int currentPlayerIndex;
@@ -35,6 +36,7 @@ namespace Managers
 
         private void StartPlayerTurn()
         {
+            turnTitle.text = "Player Turn";
             currentTurn++;
             turn.text = currentTurn.ToString();
             
@@ -42,16 +44,14 @@ namespace Managers
             {
                 player.ResetAP();
                 player.hand.Clear();
-                // DrawInitialHandForPlayer(player);
             }
 
             currentPlayerIndex = -1;
-            // currentPlayerIndex = 0;
-            // ActionManager.Instance.ShowHandForPlayer(currentPlayer);
         }
         
         public IEnumerator EnemyTurnThenDraw()
         {
+            turnTitle.text = "Enemy Turn";
             yield return EnemyManager.Instance.TakeEnemyTurn();
             StartPlayerTurn();
         }

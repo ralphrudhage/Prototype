@@ -160,16 +160,16 @@ public class FxManager : MonoBehaviour
             foreach (var tile in group)
             {
                 // fire colors
-                /* 
                 Color32 color = group.Key switch
                 {
                     0 => new Color32(255, 100, 30, 255),
                     1 => new Color32(255, 180, 60, 255),
                     2 => new Color32(255, 240, 100, 255),
                     _ => new Color32(255, 255, 150, 255)
-                };*/
+                };
                 
                 // plasma
+                /*
                 Color32 color = group.Key switch
                 {
                     0 => new Color32(80, 150, 255, 255),   // electric blue core
@@ -177,6 +177,7 @@ public class FxManager : MonoBehaviour
                     2 => new Color32(40, 90, 200, 255),    // deep plasma blue
                     _ => new Color32(30, 60, 160, 255)     // fading outer rim
                 };
+                */
                 
                 tile.SetHighlight(true);
                 tile.HighLightTileColor(color);

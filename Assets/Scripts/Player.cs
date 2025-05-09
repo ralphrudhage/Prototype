@@ -24,6 +24,7 @@ public class Player : MonoBehaviour
     private const int currentRange = 6;
     
     private TextSpawner textSpawner;
+    private GameObject apMonitor;
     private GameObject healthBar;
     public PlayerClass playerClass;
     public Queue<Card> drawPile = new();
@@ -32,8 +33,12 @@ public class Player : MonoBehaviour
 
     private void OnEnable()
     {
+        currentHp = maxHp;
+        currentAP = maxActionPoints;
+        
         textSpawner = FindAnyObjectByType<TextSpawner>();
-        healthBar = textSpawner.SpawnHealthBar();
+
+        healthBar = textSpawner.SpawnPlayerInfo();
         healthBar.GetComponent<HealthBar>().BarColor(GameUtils.lightBlue);
         
         InitializeDeck();
@@ -41,9 +46,6 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        currentHp = maxHp;
-        currentAP = maxActionPoints;
-        
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         
@@ -121,7 +123,7 @@ public class Player : MonoBehaviour
     {
         PlayerUI.Instance.UpdatePlayerUI(this);
         
-        healthBar.transform.position = hpPos.transform.position;
+        healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
         healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
     

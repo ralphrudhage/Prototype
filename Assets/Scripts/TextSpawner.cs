@@ -4,9 +4,12 @@ using UnityEngine;
 public class TextSpawner : MonoBehaviour
 {
     [SerializeField] private Transform canvasParent;
+    [SerializeField] private Transform canvasScreenParent;
     [SerializeField] private GameObject healthBar;
+    [SerializeField] private GameObject apMonitor;
     [SerializeField] private GameObject textPrefab;
     [SerializeField] private GameObject infoTextPrefab;
+    [SerializeField] private GameObject playerInfoPrefab;
     
     public void SpawnFloatingText(string param, Vector3 worldPosition)
     {
@@ -30,8 +33,18 @@ public class TextSpawner : MonoBehaviour
         return gameLabel;
     }
 
+    public GameObject SpawnPlayerInfo()
+    {
+        return Instantiate(playerInfoPrefab, canvasScreenParent);
+    }
+    
     public GameObject SpawnHealthBar()
     {
         return Instantiate(healthBar, canvasParent);
+    }
+    
+    public GameObject SpawnAPMonitor()
+    {
+        return Instantiate(apMonitor, canvasParent);
     }
 }

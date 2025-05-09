@@ -39,7 +39,7 @@ public class DynamicTile : MonoBehaviour
     public void SetHighlight(bool isHighlighted)
     {
         highLight.SetActive(isHighlighted);
-        highlightSpriteRenderer.color = Color.white;
+        highlightSpriteRenderer.color = GameUtils.lightYellow;
     }
 
     public void WhiteTile()
