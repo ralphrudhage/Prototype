@@ -1,5 +1,5 @@
+using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class DynamicTile : MonoBehaviour
@@ -8,12 +8,14 @@ public class DynamicTile : MonoBehaviour
     [SerializeField] private GameObject highLight;
     [SerializeField] private List<Sprite> dynamicSprites;
     
+    private SpriteRenderer highlightSpriteRenderer;
     private SpriteRenderer spriteRenderer;
     private Sprite startingSprite;
     private Transform originalPosition;
 
     private void Awake()
     {
+        highlightSpriteRenderer = highLight.GetComponent<SpriteRenderer>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         startingSprite = PickBiasedSprite();
         spriteRenderer.sprite = startingSprite;
@@ -37,6 +39,7 @@ public class DynamicTile : MonoBehaviour
     public void SetHighlight(bool isHighlighted)
     {
         highLight.SetActive(isHighlighted);
+        highlightSpriteRenderer.color = Color.white;
     }
 
     public void WhiteTile()
@@ -57,14 +60,42 @@ public class DynamicTile : MonoBehaviour
         spriteRenderer.color = color;
     }
     
-    public SpriteRenderer GetSpriteRenderer()
+    public void HighLightTileColor(Color32 color)
     {
-        return spriteRenderer;
+        highlightSpriteRenderer.color = color;
     }
 
     public Transform GetOriginalPosition()
     {
         return originalPosition;
     }
+    
+    public void FadeAndDisableHighlight(float duration = 0.5f, float startDelay = 0.25f)
+    {
+        StartCoroutine(FadeHighlightCoroutine(duration, startDelay));
+    }
+
+    private IEnumerator FadeHighlightCoroutine(float duration, float startDelay)
+    {
+        var sr = highlightSpriteRenderer;
+        Color originalColor = sr.color;
+
+        // ⏳ Initial delay before fade starts
+        yield return new WaitForSeconds(startDelay);
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            sr.color = new Color(originalColor.r, originalColor.g, originalColor.b, alpha);
+            yield return null;
+        }
+
+        sr.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f); // Ensure fully transparent
+        SetHighlight(false);
+    }
+
 }
 
