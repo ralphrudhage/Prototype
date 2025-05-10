@@ -7,13 +7,13 @@ using UnityEngine.UI;
 
 public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    [SerializeField] private TextMeshProUGUI actionText;
-    [SerializeField] private TextMeshProUGUI energyText;
-    [SerializeField] private TextMeshProUGUI infoText;
-    [SerializeField] private TextMeshProUGUI infoValue;
-    public Card card;
-    private CursorManager cursorManager;
+    [SerializeField] private TextMeshProUGUI apText;
+    [SerializeField] private TextMeshProUGUI cardName;
+    [SerializeField] private TextMeshProUGUI rangeValue;
+    [SerializeField] private TextMeshProUGUI effectText;
+    [SerializeField] private TextMeshProUGUI effectValue;
 
+    public Card card;
     private Vector3 originalPosition;
     private bool isDragging;
     private Image cardImage;
@@ -21,38 +21,48 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private void Start()
     {
         cardImage = GetComponent<Image>();
-        cursorManager = FindAnyObjectByType<CursorManager>();
     }
 
     public void SetUpCard(Card selectedAction)
     {
         card = selectedAction;
 
-        actionText.text = card.type == CardType.MOVE ? "Move" : "Attack";
-        energyText.text = card.cost.ToString();
+        cardName.text = card.name;
+        apText.text = card.cost.ToString();
 
-        infoText.text = card.type == CardType.MOVE ? "Range" : "Damage";
+        rangeValue.text = card.range.ToString();
 
-        infoValue.text = card switch
+        switch (card.type)
         {
-            MoveCard action => action.range.ToString(),
-            AttackCard action => action.damage.ToString(),
-            _ => infoValue.text
-        };
+            case CardType.MELEE:
+            case CardType.RANGED:
+            case CardType.DOT:
+                effectText.text = "Damage:";
+                effectValue.text = card.effect.ToString();
+                break;
+            case CardType.MOVE:
+                effectText.text = "";
+                effectValue.text = "";
+                break;
+            case CardType.PARTY:
+                effectText.text = "Amount:";
+                effectValue.text = card.effect.ToString();
+                break;
+        }
     }
 
     public void ConsumeCard()
     {
-        switch (card)
+        switch (card.type)
         {
-            case MoveCard:
+            case CardType.MOVE:
                 GridManager.Instance.ClearHighlights();
                 break;
 
-            case AttackCard action:
+            case CardType.RANGED:
                 PartyManager.Instance.currentPlayer.AttackEnemy(
                     CardManager.Instance.GetCurrentEnemy().targetPos,
-                    action.damage
+                    card.effect
                 );
                 // cursorManager.SetCrossHair();
                 break;
@@ -69,19 +79,15 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         originalPosition = transform.position;
         isDragging = true;
-        
+
         CardManager.Instance.SetCurrentAction(this);
-        
+
         cardImage.color = new Color(cardImage.color.r, cardImage.color.g, cardImage.color.b, 0.5f);
 
         switch (card)
         {
             case MoveCard move:
                 GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, move.range);
-                break;
-
-            case AttackCard:
-                // cursorManager.SetCrossHair();
                 break;
         }
     }
@@ -90,7 +96,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     {
         if (!isDragging) return;
         Vector3 newPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        newPosition.z = 0f; // Assuming 2D
+        newPosition.z = 0f;
         transform.position = newPosition;
     }
 
@@ -114,11 +120,11 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private bool CanConsume()
     {
         Vector3 droppedWorldPos = transform.position;
-        
+
         if (card is MoveCard)
         {
             Vector2Int droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
-        
+
             bool canMove = GridManager.Instance.IsValidMoveTile(droppedGridPos);
             if (canMove)
             {
@@ -128,8 +134,8 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
             return false;
         }
-        
-        if (card is AttackCard)
+
+        if (card.type == CardType.RANGED)
         {
             Collider2D hit = Physics2D.OverlapPoint(droppedWorldPos);
             if (hit != null && hit.TryGetComponent<Enemy>(out var enemy))
@@ -153,5 +159,4 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         // Add future checks for AttackCard, etc.
         return false;
     }
-
 }

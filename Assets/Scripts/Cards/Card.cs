@@ -4,5 +4,8 @@ namespace Model
     {
         CardType type { get; }
         int cost { get; }
+        int range { get; }
+        string name { get; }
+        int effect { get; }
     }
 }

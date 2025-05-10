@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using DefaultNamespace;
 using Managers;
 using Model;
+using Model.MageCards;
+using Model.PriestCards;
+using Model.WarriorCards;
 using TMPro;
 using UnityEngine;
 
@@ -68,12 +71,12 @@ public class Player : MonoBehaviour
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20)
+                    new Charge("Charge", 1, 1, 3),
+                    new Charge("Charge", 1, 1, 3),
+                    new Strike("Strike", 1, 1, 1),
+                    new Strike("Strike", 1, 1, 1),
+                    new Strike("Strike", 1, 1, 1),
+                    new Strike("Strike", 1, 1, 1),
                 });
                 break;
 
@@ -86,12 +89,12 @@ public class Player : MonoBehaviour
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20)
+                    new Fireball("Fireball", 2, 20, 6),
+                    new Fireball("Fireball", 2, 20, 6),
+                    new Fireball("Fireball", 2, 20, 6),
+                    new Fireball("Fireball", 2, 20, 6),
+                    new Curse("Curse", 2, 20, 6, 3),
+                    new Curse("Curse", 2, 20, 6, 3),
                 });
                 break;
 
@@ -103,13 +106,13 @@ public class Player : MonoBehaviour
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20),
-                    new AttackCard(1, 20)
+                    new Heal("Heal", 2, 20, 5),
+                    new Heal("Heal", 2, 20, 5),
+                    new Heal("Heal", 2, 20, 5),
+                    new Heal("Heal", 2, 20, 5),
+                    new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6),
                 });
                 break;
         }

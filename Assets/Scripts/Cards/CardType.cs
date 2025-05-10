@@ -2,7 +2,10 @@ namespace Model
 {
     public enum CardType
     {
-        ATTACK,
-        MOVE,
+        PARTY,
+        DOT,
+        MELEE,
+        RANGED,
+        MOVE
     }
 }

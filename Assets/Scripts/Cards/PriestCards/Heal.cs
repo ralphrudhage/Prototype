@@ -1,18 +1,18 @@
-namespace Model
+namespace Model.PriestCards
 {
-    public class MoveCard : Card
+    public class Heal : Card
     {
-        public CardType type => CardType.MOVE;
+        public CardType type => CardType.PARTY;
         public int cost { get; }
         public int range { get; }
         public string name { get; }
         public int effect { get; }
 
-        public MoveCard(int cost, int range)
+        public Heal(string name, int cost, int effect, int range)
         {
-            name = "Move";
-            effect = 0;
+            this.name = name;
             this.cost = cost;
+            this.effect = effect;
             this.range = range;
         }
     }
