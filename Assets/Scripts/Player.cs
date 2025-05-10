@@ -24,8 +24,7 @@ public class Player : MonoBehaviour
     private const int currentRange = 6;
     
     private TextSpawner textSpawner;
-    private GameObject apMonitor;
-    private GameObject healthBar;
+    private GameObject playerInfo;
     public PlayerClass playerClass;
     public Queue<Card> drawPile = new();
     public List<Card> hand = new();
@@ -38,8 +37,8 @@ public class Player : MonoBehaviour
         
         textSpawner = FindAnyObjectByType<TextSpawner>();
 
-        healthBar = textSpawner.SpawnPlayerInfo();
-        healthBar.GetComponent<HealthBar>().BarColor(GameUtils.lightBlue);
+        playerInfo = textSpawner.SpawnPlayerInfo();
+        playerInfo.GetComponent<PlayerInfo>().BarColor(GameUtils.lightBlue);
         
         InitializeDeck();
     }
@@ -123,8 +122,8 @@ public class Player : MonoBehaviour
     {
         PlayerUI.Instance.UpdatePlayerUI(this);
         
-        healthBar.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
+        playerInfo.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
+        playerInfo.GetComponent<PlayerInfo>().UpdatePlayerInfo(currentHp, maxHp, currentAP);
     }
     
     public void TakeDamage(int damageTaken)

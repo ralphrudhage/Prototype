@@ -7,11 +7,6 @@ namespace Managers
         public Texture2D cursorTexNormal;
         public Texture2D cursorTexClicked;
 
-        public Texture2D crossHairNormal;
-        public Texture2D crossHairClicked;
-
-        private bool isCrossHair;
-
         private void Start()
         {
             SetCursor(cursorTexNormal);
@@ -20,36 +15,14 @@ namespace Managers
 
         void Update()
         {
-            if (Input.GetMouseButtonDown(0)) // Left mouse button
+            if (Input.GetMouseButtonDown(0))
             {
-                if (isCrossHair)
-                {
-                    SetCursor(crossHairClicked);
-                    isCrossHair = false;
-                }
-                else
-                {
-                    SetCursor(cursorTexClicked);
-                }
+                SetCursor(cursorTexClicked);
             }
             else if (Input.GetMouseButtonUp(0))
             {
-                if (isCrossHair)
-                {
-                    SetCursor(crossHairNormal);
-                    isCrossHair = false;
-                }
-                else
-                {
-                    SetCursor(cursorTexNormal);
-                }
+                SetCursor(cursorTexNormal);
             }
-        }
-
-        public void SetCrossHair()
-        {
-            SetCursor(crossHairNormal);
-            isCrossHair = true;
         }
 
         private void SetCursor(Texture2D texture)

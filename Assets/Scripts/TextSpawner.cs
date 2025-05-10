@@ -42,9 +42,4 @@ public class TextSpawner : MonoBehaviour
     {
         return Instantiate(healthBar, canvasParent);
     }
-    
-    public GameObject SpawnAPMonitor()
-    {
-        return Instantiate(apMonitor, canvasParent);
-    }
 }
