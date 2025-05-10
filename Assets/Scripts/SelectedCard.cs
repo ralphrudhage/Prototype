@@ -58,14 +58,19 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             case CardType.MOVE:
                 GridManager.Instance.ClearHighlights();
                 break;
-
+            
+            case CardType.DOT:
+            case CardType.MELEE:
             case CardType.RANGED:
                 PartyManager.Instance.currentPlayer.AttackEnemy(
                     CardManager.Instance.GetCurrentEnemy().targetPos,
                     card.effect
                 );
-                // cursorManager.SetCrossHair();
                 break;
+            case CardType.PARTY:
+                PartyManager.Instance.currentPlayer.CastSpell(card);
+                CardManager.Instance.GetCurrentPartyPlayer().CardEffect(card);
+            break;
         }
 
         PartyManager.Instance.currentPlayer.UseAP(card.cost);
@@ -121,42 +126,72 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     {
         Vector3 droppedWorldPos = transform.position;
 
-        if (card is MoveCard)
+        switch (card.type)
         {
-            Vector2Int droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
-
-            bool canMove = GridManager.Instance.IsValidMoveTile(droppedGridPos);
-            if (canMove)
+            case CardType.MOVE:
             {
-                PartyManager.Instance.currentPlayer.SetGridPosition(droppedGridPos);
-                return true;
-            }
+                var droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
 
-            return false;
-        }
-
-        if (card.type == CardType.RANGED)
-        {
-            Collider2D hit = Physics2D.OverlapPoint(droppedWorldPos);
-            if (hit != null && hit.TryGetComponent<Enemy>(out var enemy))
-            {
-                Vector2Int enemyPos = enemy.currentGridPos;
-                Vector2Int playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
-                int range = PartyManager.Instance.currentPlayer.GetCurrentRange();
-
-                int dx = Mathf.Abs(enemyPos.x - playerPos.x);
-                int dy = Mathf.Abs(enemyPos.y - playerPos.y);
-                int manhattanDistance = dx + dy;
-
-                if (manhattanDistance <= range)
+                var canMove = GridManager.Instance.IsValidMoveTile(droppedGridPos);
+                if (canMove)
                 {
-                    CardManager.Instance.SetCurrentEnemy(enemy); // Set this so ConsumeCard can use it
+                    PartyManager.Instance.currentPlayer.SetGridPosition(droppedGridPos);
                     return true;
                 }
+
+                return false;
+            }
+            // damage attacks
+            case CardType.RANGED or CardType.DOT or CardType.MELEE:
+            {
+                var hit = Physics2D.OverlapPoint(droppedWorldPos);
+                if (hit != null && hit.TryGetComponent<Enemy>(out var enemy))
+                {
+                    var enemyPos = enemy.currentGridPos;
+                    var playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
+
+                    var dx = Mathf.Abs(enemyPos.x - playerPos.x);
+                    var dy = Mathf.Abs(enemyPos.y - playerPos.y);
+                    var chebyshevDistance = Mathf.Max(dx, dy);
+
+                    if (chebyshevDistance <= card.range)
+                    {
+                        CardManager.Instance.SetCurrentEnemy(enemy); // Set this so ConsumeCard can use it
+                        return true;
+                    }
+
+
+                    Debug.Log("Out of range");
+                }
+
+                break;
+            }
+            // target a party member for i.e. healing spells
+            case CardType.PARTY:
+            {
+                var hit = Physics2D.OverlapPoint(droppedWorldPos);
+                if (hit != null && hit.TryGetComponent<Player>(out var partyPlayer))
+                {
+                    var enemyPos = partyPlayer.currentGridPos;
+                    var playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
+
+                    var dx = Mathf.Abs(enemyPos.x - playerPos.x);
+                    var dy = Mathf.Abs(enemyPos.y - playerPos.y);
+                    var chebyshevDistance = Mathf.Max(dx, dy);
+
+                    if (chebyshevDistance <= card.range)
+                    {
+                        CardManager.Instance.SetCurrentPartyPlayer(partyPlayer); // Set this so ConsumeCard can use it
+                        return true;
+                    }
+
+                    Debug.Log("Out of range");
+                }
+
+                break;
             }
         }
-
-        // Add future checks for AttackCard, etc.
+        
         return false;
     }
 }

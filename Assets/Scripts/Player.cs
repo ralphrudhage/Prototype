@@ -15,17 +15,17 @@ public class Player : MonoBehaviour
     [SerializeField] private GameObject hpPos;
     [SerializeField] public GameObject playerTarget;
     [SerializeField] private GameObject bloodPrefab;
-    
+
     public Vector2Int currentGridPos;
 
     private const int maxHp = 100;
     private int currentHp;
-    
+
     private const int maxActionPoints = 3;
     private int currentAP;
-    
+
     private const int currentRange = 6;
-    
+
     private TextSpawner textSpawner;
     private GameObject playerInfo;
     public PlayerClass playerClass;
@@ -35,14 +35,17 @@ public class Player : MonoBehaviour
 
     private void OnEnable()
     {
-        currentHp = maxHp;
-        currentAP = maxActionPoints;
+        // test
+        currentHp = 50;
         
+        // currentHp = maxHp;
+        currentAP = maxActionPoints;
+
         textSpawner = FindAnyObjectByType<TextSpawner>();
 
         playerInfo = textSpawner.SpawnPlayerInfo();
         playerInfo.GetComponent<PlayerInfo>().BarColor(GameUtils.lightBlue);
-        
+
         InitializeDeck();
     }
 
@@ -52,10 +55,10 @@ public class Player : MonoBehaviour
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         
         RefreshPlayerUI();
-        
+
         Debug.Log($"{playerClass} set at {currentGridPos}");
     }
-    
+
     private void InitializeDeck()
     {
         List<Card> actions = new();
@@ -106,11 +109,11 @@ public class Player : MonoBehaviour
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
                     new MoveCard(1, 1),
-                    new Heal("Heal", 2, 20, 5),
-                    new Heal("Heal", 2, 20, 5),
-                    new Heal("Heal", 2, 20, 5),
-                    new Heal("Heal", 2, 20, 5),
-                    new Wand("Wand", 1, 5, 6),
+                    new Heal("Heal", 1, 20, 6),
+                    new Heal("Heal", 1, 20, 6),
+                    new Heal("Heal", 1, 20, 6),
+                    new Heal("Heal", 1, 20, 6),
+                    new Heal("Heal", 1, 20, 6),
                     new Wand("Wand", 1, 5, 6),
                     new Wand("Wand", 1, 5, 6),
                 });
@@ -120,19 +123,19 @@ public class Player : MonoBehaviour
         actions.Shuffle();
         drawPile = new Queue<Card>(actions);
     }
-    
+
     private void RefreshPlayerUI()
     {
         PlayerUI.Instance.UpdatePlayerUI(this);
-        
+
         playerInfo.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
         playerInfo.GetComponent<PlayerInfo>().UpdatePlayerInfo(currentHp, maxHp, currentAP);
     }
-    
+
     public void TakeDamage(int damageTaken)
     {
         Instantiate(bloodPrefab, playerTarget.transform.position, Quaternion.identity);
-        textSpawner.SpawnFloatingText(damageTaken.ToString(), playerTarget.transform.position);
+        textSpawner.SpawnFloatingText(damageTaken.ToString(), playerTarget.transform.position, GameUtils.lightRed);
         currentHp -= damageTaken;
         RefreshPlayerUI();
         if (currentHp <= 0)
@@ -140,13 +143,13 @@ public class Player : MonoBehaviour
             Debug.Log($"{playerClass} DIED");
         }
     }
-    
+
     public void SetGridPosition(Vector2Int gridPos)
     {
         currentGridPos = gridPos;
         transform.position = GridManager.Instance.GetWorldPosition(gridPos);
         RefreshPlayerUI();
-        
+
         Debug.Log($"{playerClass} set at {currentGridPos}");
     }
 
@@ -177,8 +180,21 @@ public class Player : MonoBehaviour
         var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
         bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage, true);
     }
-    
-    private void OnMouseDown()
+
+    public void CastSpell(Card card)
+    {
+        Debug.LogFormat("Player {0} casts spell {1}", playerClass, card.name);
+    }
+
+    public void CardEffect(Card card)
+    {
+        Debug.LogFormat("Player {0} receives card effect {1} with effect {2}", playerClass, card.name, card.effect);
+        currentHp += card.effect;
+        textSpawner.SpawnFloatingText(card.effect.ToString(), playerTarget.transform.position, GameUtils.lightYellow);
+        RefreshPlayerUI();
+    }
+
+private void OnMouseDown()
     {
         PartyManager.Instance.SetCurrentPlayer(this);
         Debug.Log($"{playerClass} selected");

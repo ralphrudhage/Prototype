@@ -11,13 +11,14 @@ public class TextSpawner : MonoBehaviour
     [SerializeField] private GameObject infoTextPrefab;
     [SerializeField] private GameObject playerInfoPrefab;
     
-    public void SpawnFloatingText(string param, Vector3 worldPosition)
+    public void SpawnFloatingText(string param, Vector3 worldPosition, Color32 color)
     {
         var gameLabel = Instantiate(textPrefab, canvasParent);
         gameLabel.transform.position = worldPosition;
 
         var text = gameLabel.GetComponent<TextMeshProUGUI>();
         text.text = param;
+        text.color = color;
         
         Destroy(gameLabel, 1f);
     }

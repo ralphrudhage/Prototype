@@ -1057,7 +1057,7 @@ Transform:
   m_GameObject: {fileID: 74385017}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5, y: 0, z: 0}
+  m_LocalPosition: {x: -4, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13960,8 +13960,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cursorTexNormal: {fileID: 2800000, guid: 272d48b0f966d4448825a1c1c65c1859, type: 3}
   cursorTexClicked: {fileID: 2800000, guid: 58786b5a92b6c4a359e19c0efdf5db07, type: 3}
-  crossHairNormal: {fileID: 2800000, guid: 2404d14741ca840cd820182552c1403d, type: 3}
-  crossHairClicked: {fileID: 2800000, guid: b2760272e5235463fb7752f58f00065e, type: 3}
 --- !u!4 &1733560006
 Transform:
   m_ObjectHideFlags: 0

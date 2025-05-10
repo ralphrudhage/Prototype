@@ -13,6 +13,7 @@ namespace Managers
         private Player currentPlayer;
         private SelectedCard currentCard;
         private Enemy currentEnemy;
+        private Player currentPartyPlayer;
         private int currentTurn;
         
         public static CardManager Instance { get; private set; }
@@ -67,6 +68,16 @@ namespace Managers
         public void SetCurrentEnemy(Enemy enemy)
         {
             currentEnemy = enemy;
+        }
+        
+        public void SetCurrentPartyPlayer(Player player)
+        {
+            currentPartyPlayer = player;
+        }
+        
+        public Player GetCurrentPartyPlayer()
+        {
+            return currentPartyPlayer;
         }
 
         public Enemy GetCurrentEnemy()
