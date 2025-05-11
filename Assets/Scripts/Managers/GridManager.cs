@@ -33,7 +33,8 @@ namespace Managers
 
                 if (!gridCells.ContainsKey(gridPos))
                 {
-                    gridCells[gridPos] = new GridCell(gridPos, walkable: true);
+                    // standard tileType means walkable
+                    gridCells[gridPos] = new GridCell(gridPos, walkable: tile.tileType == TileType.Standard);
                     dynamicTiles[gridPos] = tile;
                 }
                 else
@@ -86,7 +87,8 @@ namespace Managers
                 {
                     Vector2Int target = from + dir * step;
 
-                    if (!gridCells.ContainsKey(target)) break;
+                    if (!gridCells.ContainsKey(target) || !IsWalkable(target))
+                        break; // no tile OR not walkable -> stop this direction
 
                     bool isDiagonal = Mathf.Abs(dir.x) + Mathf.Abs(dir.y) == 2;
 
@@ -95,10 +97,13 @@ namespace Managers
                         Vector2Int horizontal = new(from.x + dir.x, from.y);
                         Vector2Int vertical = new(from.x, from.y + dir.y);
 
-                        if (!gridCells.ContainsKey(horizontal) || !gridCells.ContainsKey(vertical))
+                        // Only block if BOTH adjacent sides are blocked
+                        if (!IsWalkable(horizontal) && !IsWalkable(vertical))
                             break;
                     }
-
+                    if (IsOccupied(target))
+                        break;
+                    
                     validMoveTiles.Add(target);
 
                     if (dynamicTiles.TryGetValue(target, out var tile))
@@ -132,23 +137,7 @@ namespace Managers
 
             return true;
         }
-
-
-        /*
-        private void OnDrawGizmos()
-        {
-            if (gridTilemap == null || gridCells == null) return;
-
-            Gizmos.color = Color.green;
-
-            foreach (var cell in gridCells.Values)
-            {
-                var center = GetWorldPosition(cell.position);
-                Gizmos.DrawWireCube(center, Vector3.one);
-            }
-        }
-        */
-
+        
         public void OnHighlightTileClicked(Vector2Int gridPos)
         {
             if (CardManager.Instance.PerformAction())
@@ -247,6 +236,18 @@ namespace Managers
             // if (!result) Debug.Log($"Tile {pos} is not walkable");
             return result;
         }
+        
+        private bool IsOccupied(Vector2Int gridPos)
+        {
+            Vector3 worldPos = GetWorldPosition(gridPos);
 
+            // Check if anything (enemy/player) is standing at that grid position
+            var hit = Physics2D.OverlapPoint(worldPos);
+
+            if (hit != null && (hit.GetComponent<Enemy>() != null || hit.GetComponent<Player>() != null))
+                return true;
+
+            return false;
+        }
     }
 }

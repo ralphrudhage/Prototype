@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DefaultNamespace;
 using Managers;
 using TMPro;
@@ -12,15 +13,15 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject infoPos;
     [SerializeField] private GameObject bloodParent;
     [SerializeField] private GameObject bloodPrefab;
-    
+
     public Vector2Int currentGridPos;
 
     private const int maxHp = 100;
     private int currentHp;
-    
+
     private const int maxActionPoints = 3;
     private int currentAP;
-    
+
     private const int rangedAttack = 6;
     private const int attackApCost = 2;
     private const int damage = 10;
@@ -30,6 +31,7 @@ public class Enemy : MonoBehaviour
     private TextSpawner textSpawner;
     private GameObject healthBar;
     private GameObject infoText;
+    private Player currentPlayerTarget;
 
     public Vector2 targetPos;
 
@@ -64,10 +66,10 @@ public class Enemy : MonoBehaviour
     private void RefreshEnemyUI()
     {
         targetPos = bloodParent.transform.position;
-        
+
         infoText.transform.position = infoPos.transform.position;
         infoText.GetComponent<TextMeshProUGUI>().text = $"AP: {currentAP}";
-        
+
         healthBar.transform.position = hpPos.transform.position;
         healthBar.GetComponent<HealthBar>().UpdateHp(currentHp, maxHp);
     }
@@ -82,15 +84,18 @@ public class Enemy : MonoBehaviour
 
     private bool IsTargetableByPlayer()
     {
-        return IsInRange(PartyManager.Instance.currentPlayer.currentGridPos, PartyManager.Instance.currentPlayer.GetCurrentRange()) &&
+        return IsInRange(PartyManager.Instance.currentPlayer.currentGridPos,
+                   PartyManager.Instance.currentPlayer.GetCurrentRange()) &&
                HasStrictLineOfSight(PartyManager.Instance.currentPlayer.currentGridPos, currentGridPos);
     }
 
-    private bool CanAttackPlayer()
+    private Player FindPlayerTarget()
     {
-        return IsInRange(PartyManager.Instance.currentPlayer.currentGridPos, rangedAttack) &&
-               HasStrictLineOfSight(currentGridPos, PartyManager.Instance.currentPlayer.currentGridPos) &&
-               currentAP >= attackApCost;
+        currentPlayerTarget = null;
+        var players = GameObject.FindGameObjectsWithTag("Player");
+        return players.Select(player => player.GetComponent<Player>()).FirstOrDefault(target =>
+            IsInRange(target.currentGridPos, rangedAttack) &&
+            HasStrictLineOfSight(currentGridPos, target.currentGridPos) && currentAP >= attackApCost);
     }
 
     private bool IsInRange(Vector2Int origin, int range)
@@ -100,7 +105,7 @@ public class Enemy : MonoBehaviour
         int manhattanDistance = dx + dy;
         return manhattanDistance <= range;
     }
-    
+
     private bool HasStrictLineOfSight(Vector2Int origin, Vector2Int target)
     {
         Vector3 worldStart = GridManager.Instance.GetWorldPosition(origin);
@@ -111,7 +116,7 @@ public class Enemy : MonoBehaviour
 
         Vector3 current = worldStart;
         Vector2Int previousTile = origin;
-        
+
         // 🔒 Block direct diagonal LOS if adjacent corners are blocked
         int dx0 = target.x - origin.x;
         int dy0 = target.y - origin.y;
@@ -123,7 +128,8 @@ public class Enemy : MonoBehaviour
 
             if (!GridManager.Instance.IsWalkable(corner1) || !GridManager.Instance.IsWalkable(corner2))
             {
-                Debug.LogWarning($"LOS blocked immediately due to corner clipping between {origin} and {target} via {corner1} & {corner2}");
+                Debug.LogWarning(
+                    $"LOS blocked immediately due to corner clipping between {origin} and {target} via {corner1} & {corner2}");
                 return false;
             }
         }
@@ -148,8 +154,8 @@ public class Enemy : MonoBehaviour
 
             if (Mathf.Abs(dx) == 1 && Mathf.Abs(dy) == 1)
             {
-                Vector2Int check1 = new Vector2Int(previousTile.x + dx, previousTile.y);     // Horizontal neighbor
-                Vector2Int check2 = new Vector2Int(previousTile.x, previousTile.y + dy);     // Vertical neighbor
+                Vector2Int check1 = new Vector2Int(previousTile.x + dx, previousTile.y); // Horizontal neighbor
+                Vector2Int check2 = new Vector2Int(previousTile.x, previousTile.y + dy); // Vertical neighbor
 
                 if (!GridManager.Instance.IsWalkable(check1) || !GridManager.Instance.IsWalkable(check2))
                 {
@@ -163,7 +169,7 @@ public class Enemy : MonoBehaviour
 
         return true;
     }
-    
+
     private void OnDestroy()
     {
         if (EnemyManager.Instance != null)
@@ -180,7 +186,9 @@ public class Enemy : MonoBehaviour
         {
             yield return new WaitForSeconds(actionDelay);
 
-            if (CanAttackPlayer())
+            currentPlayerTarget = FindPlayerTarget();
+
+            if (currentPlayerTarget != null)
             {
                 AttackPlayer();
                 currentAP = 0;
@@ -200,18 +208,49 @@ public class Enemy : MonoBehaviour
         Debug.Log($"Enemy at {currentGridPos} ends turn.");
     }
 
+    private Vector2Int FindClosestPlayerTarget()
+    {
+        if (currentPlayerTarget != null)
+        {
+            return currentPlayerTarget.currentGridPos;
+        }
+
+        var players = GameObject.FindGameObjectsWithTag("Player")
+            .Select(go => go.GetComponent<Player>())
+            .Where(p => p != null)
+            .ToList();
+
+        if (players.Count == 0)
+        {
+            Debug.LogWarning("No players found!");
+            return currentGridPos;
+        }
+
+        Player closest = players
+            .OrderBy(p => Vector2Int.Distance(currentGridPos, p.currentGridPos))
+            .First();
+        
+        Debug.Log($"enemy selected target {closest.playerClass} at {closest.currentGridPos}");
+        currentPlayerTarget = closest;
+
+        return closest.currentGridPos;
+    }
+
     private IEnumerator TryMoveTowardPlayer()
     {
         if (currentAP <= 0) yield break;
 
-        Vector2Int playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
+        Vector2Int playerPos = FindClosestPlayerTarget();
         Vector2Int? bestMove = null;
         float bestDistance = float.MaxValue;
 
         foreach (Vector2Int neighbor in GridManager.Instance.GetNeighbors(currentGridPos))
         {
             if (!GridManager.Instance.IsWalkable(neighbor))
-                continue;
+                break;
+
+            if (IsOccupied(neighbor))
+                break;
 
             if (HasStrictLineOfSight(neighbor, playerPos))
             {
@@ -246,9 +285,15 @@ public class Enemy : MonoBehaviour
 
         for (int i = 0; i < maxSteps && currentAP > 0; i++)
         {
+            if (!GridManager.Instance.IsWalkable(path[i]) || IsOccupied(path[i]))
+            {
+                Debug.Log($"Blocked at {path[i]}, stopping pathing");
+                break;
+            }
+
             yield return MoveTo(path[i]);
         }
-
+        
         RefreshEnemyUI();
     }
 
@@ -266,10 +311,19 @@ public class Enemy : MonoBehaviour
 
     private void AttackPlayer()
     {
+        Debug.Log($"enemy attack {currentPlayerTarget.playerClass} at {currentPlayerTarget.currentGridPos}");
         var bullet = Instantiate(projectilePrefab, bloodParent.transform.position, Quaternion.identity);
-        bullet.GetComponent<Projectile>().Initialize(PartyManager.Instance.currentPlayer.playerTarget.transform.position, damage, false);
+        bullet.GetComponent<Projectile>()
+            .Initialize(currentPlayerTarget.playerTarget.transform.position, damage, false);
 
         currentAP -= attackApCost;
         RefreshEnemyUI();
+    }
+
+    private bool IsOccupied(Vector2Int pos)
+    {
+        Vector3 worldPos = GridManager.Instance.GetWorldPosition(pos);
+        var hit = Physics2D.OverlapPoint(worldPos);
+        return hit != null && (hit.GetComponent<Enemy>() != null || hit.GetComponent<Player>() != null);
     }
 }

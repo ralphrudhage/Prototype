@@ -58,7 +58,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             case CardType.MOVE:
                 GridManager.Instance.ClearHighlights();
                 break;
-            
+
             case CardType.DOT:
             case CardType.MELEE:
             case CardType.RANGED:
@@ -70,7 +70,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             case CardType.PARTY:
                 PartyManager.Instance.currentPlayer.CastSpell(card);
                 CardManager.Instance.GetCurrentPartyPlayer().CardEffect(card);
-            break;
+                break;
         }
 
         PartyManager.Instance.currentPlayer.UseAP(card.cost);
@@ -147,19 +147,14 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                 var hit = Physics2D.OverlapPoint(droppedWorldPos);
                 if (hit != null && hit.TryGetComponent<Enemy>(out var enemy))
                 {
-                    var enemyPos = enemy.currentGridPos;
+                    var targetPos = enemy.currentGridPos;
                     var playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
 
-                    var dx = Mathf.Abs(enemyPos.x - playerPos.x);
-                    var dy = Mathf.Abs(enemyPos.y - playerPos.y);
-                    var chebyshevDistance = Mathf.Max(dx, dy);
-
-                    if (chebyshevDistance <= card.range)
+                    if (GetChebyshevDistance(targetPos, playerPos) <= card.range)
                     {
-                        CardManager.Instance.SetCurrentEnemy(enemy); // Set this so ConsumeCard can use it
+                        CardManager.Instance.SetCurrentEnemy(enemy);
                         return true;
                     }
-
 
                     Debug.Log("Out of range");
                 }
@@ -172,16 +167,12 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                 var hit = Physics2D.OverlapPoint(droppedWorldPos);
                 if (hit != null && hit.TryGetComponent<Player>(out var partyPlayer))
                 {
-                    var enemyPos = partyPlayer.currentGridPos;
+                    var targetPos = partyPlayer.currentGridPos;
                     var playerPos = PartyManager.Instance.currentPlayer.currentGridPos;
 
-                    var dx = Mathf.Abs(enemyPos.x - playerPos.x);
-                    var dy = Mathf.Abs(enemyPos.y - playerPos.y);
-                    var chebyshevDistance = Mathf.Max(dx, dy);
-
-                    if (chebyshevDistance <= card.range)
+                    if (GetChebyshevDistance(targetPos, playerPos) <= card.range)
                     {
-                        CardManager.Instance.SetCurrentPartyPlayer(partyPlayer); // Set this so ConsumeCard can use it
+                        CardManager.Instance.SetCurrentPartyPlayer(partyPlayer);
                         return true;
                     }
 
@@ -191,7 +182,14 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                 break;
             }
         }
-        
+
         return false;
+    }
+
+    private int GetChebyshevDistance(Vector2Int a, Vector2Int b)
+    {
+        int dx = Mathf.Abs(a.x - b.x);
+        int dy = Mathf.Abs(a.y - b.y);
+        return Mathf.Max(dx, dy);
     }
 }

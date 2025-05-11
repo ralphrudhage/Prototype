@@ -2,6 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum TileType
+{
+    Standard,
+    Wall
+}
+
 public class DynamicTile : MonoBehaviour
 {
     [SerializeField] private Sprite whiteSprite;
@@ -12,12 +18,14 @@ public class DynamicTile : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Sprite startingSprite;
     private Transform originalPosition;
+    public TileType tileType = TileType.Standard;
 
     private void Awake()
     {
         highlightSpriteRenderer = highLight.GetComponent<SpriteRenderer>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        startingSprite = PickBiasedSprite();
+
+        startingSprite = tileType == TileType.Standard ? PickBiasedSprite() : spriteRenderer.sprite;
         spriteRenderer.sprite = startingSprite;
         highLight.SetActive(false);
         originalPosition = transform;
