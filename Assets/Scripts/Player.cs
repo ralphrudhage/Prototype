@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Managers;
@@ -27,24 +28,29 @@ public class Player : MonoBehaviour
     private const int currentRange = 6;
 
     private TextSpawner textSpawner;
-    private GameObject playerInfo;
+    private PlayerInfo playerInfo;
+    private GameObject playerInfoObject;
     public PlayerClass playerClass;
     public Queue<Card> drawPile = new();
     public List<Card> hand = new();
     public List<Card> discarded = new();
+    
+    private Vector3 originalPosition;
+    private bool isDragging;
 
     private void OnEnable()
     {
         // test
         currentHp = 50;
-        
+
         // currentHp = maxHp;
         currentAP = maxActionPoints;
 
         textSpawner = FindAnyObjectByType<TextSpawner>();
 
-        playerInfo = textSpawner.SpawnPlayerInfo();
-        playerInfo.GetComponent<PlayerInfo>().BarColor(GameUtils.lightBlue);
+        playerInfoObject = textSpawner.SpawnPlayerInfo();
+        playerInfo = playerInfoObject.GetComponent<PlayerInfo>();
+        playerInfo.BarColor(GameUtils.lightBlue);
 
         InitializeDeck();
     }
@@ -54,9 +60,19 @@ public class Player : MonoBehaviour
         currentGridPos = GridManager.Instance.GetGridPositionFromWorld(transform.position);
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         
+        originalPosition = transform.position;
+
         RefreshPlayerUI();
 
         Debug.Log($"{playerClass} set at {currentGridPos}");
+    }
+
+    private void LateUpdate()
+    {
+        if (isDragging)
+        {
+            playerInfoObject.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
+        }
     }
 
     private void InitializeDeck()
@@ -68,14 +84,13 @@ public class Player : MonoBehaviour
             case PlayerClass.WARRIOR:
                 actions.AddRange(new Card[]
                 {
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
                     new Charge("Charge", 1, 1, 3),
                     new Charge("Charge", 1, 1, 3),
+                    new Charge("Charge", 1, 1, 3),
+                    new Charge("Charge", 1, 1, 3),
+                    new Charge("Charge", 1, 1, 3),
+                    new Strike("Strike", 1, 1, 1),
+                    new Strike("Strike", 1, 1, 1),
                     new Strike("Strike", 1, 1, 1),
                     new Strike("Strike", 1, 1, 1),
                     new Strike("Strike", 1, 1, 1),
@@ -86,29 +101,25 @@ public class Player : MonoBehaviour
             case PlayerClass.MAGE:
                 actions.AddRange(new Card[]
                 {
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
+                    new Fireball("Fireball", 1, 20, 6),
+                    new Fireball("Fireball", 1, 20, 6),
                     new Fireball("Fireball", 1, 20, 6),
                     new Fireball("Fireball", 1, 20, 6),
                     new Fireball("Fireball", 1, 20, 6),
                     new Fireball("Fireball", 1, 20, 6),
                     new Curse("Curse", 2, 20, 6, 3),
                     new Curse("Curse", 2, 20, 6, 3),
+                    new Curse("Curse", 2, 20, 6, 3),
+                    new Curse("Curse", 2, 20, 6, 3),
+                    new Curse("Curse", 2, 20, 6, 3),
+                    new Curse("Curse", 2, 20, 6, 3)
                 });
                 break;
 
             case PlayerClass.PRIEST:
                 actions.AddRange(new Card[]
                 {
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
-                    new MoveCard(1, 1),
+                    new Heal("Heal", 1, 20, 6),
                     new Heal("Heal", 1, 20, 6),
                     new Heal("Heal", 1, 20, 6),
                     new Heal("Heal", 1, 20, 6),
@@ -116,6 +127,10 @@ public class Player : MonoBehaviour
                     new Heal("Heal", 1, 20, 6),
                     new Wand("Wand", 1, 5, 6),
                     new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6),
+                    new Wand("Wand", 1, 5, 6)
                 });
                 break;
         }
@@ -128,8 +143,8 @@ public class Player : MonoBehaviour
     {
         PlayerUI.Instance.UpdatePlayerUI(this);
 
-        playerInfo.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        playerInfo.GetComponent<PlayerInfo>().UpdatePlayerInfo(currentHp, maxHp, currentAP);
+        playerInfoObject.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
+        playerInfo.UpdatePlayerInfo(currentHp, maxHp, currentAP);
     }
 
     public void TakeDamage(int damageTaken)
@@ -193,11 +208,49 @@ public class Player : MonoBehaviour
         textSpawner.SpawnFloatingText(card.effect.ToString(), playerTarget.transform.position, GameUtils.lightYellow);
         RefreshPlayerUI();
     }
-
-private void OnMouseDown()
+    
+    private void OnMouseDown()
     {
         PartyManager.Instance.SetCurrentPlayer(this);
         Debug.Log($"{playerClass} selected");
+        
+        if (PartyManager.Instance.currentPlayer.GetCurrentAP() <= 0) return;
+        
+        isDragging = true;
+        originalPosition = transform.position;
+
+        GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, 3);
+    }
+
+    private void OnMouseDrag()
+    {
+        if (!isDragging) return;
+
+        Vector3 newPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        newPosition.z = 0f;
+        transform.position = newPosition;
+    }
+
+    private void OnMouseUp()
+    {
+        if (!isDragging) return;
+        isDragging = false;
+
+        Vector3 droppedWorldPos = transform.position;
+        Vector2Int droppedGridPos = GridManager.Instance.GetGridPositionFromWorld(droppedWorldPos);
+
+        if (GridManager.Instance.IsValidMoveTile(droppedGridPos))
+        {
+            PartyManager.Instance.currentPlayer.SetGridPosition(droppedGridPos);
+            PartyManager.Instance.currentPlayer.UseAP(1);
+        }
+        else
+        {
+            transform.position = originalPosition;
+            RefreshPlayerUI();
+        }
+
+        GridManager.Instance.ClearHighlights();
     }
 
     public void SelectedCircle()
