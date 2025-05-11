@@ -84,17 +84,18 @@ public class Player : MonoBehaviour
             case PlayerClass.WARRIOR:
                 actions.AddRange(new Card[]
                 {
-                    new Charge("Charge", 1, 1, 3),
-                    new Charge("Charge", 1, 1, 3),
-                    new Charge("Charge", 1, 1, 3),
-                    new Charge("Charge", 1, 1, 3),
-                    new Charge("Charge", 1, 1, 3),
-                    new Strike("Strike", 1, 1, 1),
-                    new Strike("Strike", 1, 1, 1),
-                    new Strike("Strike", 1, 1, 1),
-                    new Strike("Strike", 1, 1, 1),
-                    new Strike("Strike", 1, 1, 1),
-                    new Strike("Strike", 1, 1, 1),
+                    new Charge("Charge", 1, 20, 3),
+                    new Charge("Charge", 1, 20, 3),
+                    new Charge("Charge", 1, 20, 3),
+                    new Charge("Charge", 1, 20, 3),
+                    new Charge("Charge", 1, 20, 3),
+                    new Charge("Charge", 1, 20, 3),
+                    new Strike("Strike", 1, 20, 1),
+                    new Strike("Strike", 1, 20, 1),
+                    new Strike("Strike", 1, 20, 1),
+                    new Strike("Strike", 1, 20, 1),
+                    new Strike("Strike", 1, 20, 1),
+                    new Strike("Strike", 1, 20, 1),
                 });
                 break;
 

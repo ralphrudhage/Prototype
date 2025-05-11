@@ -71,39 +71,26 @@ namespace Managers
             ClearHighlights();
             validMoveTiles.Clear();
 
-            Vector2Int[] directions =
-            {
-                Vector2Int.up,
-                Vector2Int.down,
-                Vector2Int.left,
-                Vector2Int.right,
-                new(1, 1), new(-1, 1),
-                new(1, -1), new(-1, -1)
-            };
+            int distance = range;
 
-            foreach (var dir in directions)
+            for (int x = from.x - distance; x <= from.x + distance; x++)
             {
-                for (int step = 1; step <= range; step++)
+                for (int y = from.y - distance; y <= from.y + distance; y++)
                 {
-                    Vector2Int target = from + dir * step;
+                    Vector2Int target = new Vector2Int(x, y);
 
-                    if (!gridCells.ContainsKey(target) || !IsWalkable(target))
-                        break; // no tile OR not walkable -> stop this direction
+                    if (target == from)
+                        continue; // don't highlight the tile player is standing on
 
-                    bool isDiagonal = Mathf.Abs(dir.x) + Mathf.Abs(dir.y) == 2;
+                    if (!gridCells.ContainsKey(target))
+                        continue; // no tile
 
-                    if (isDiagonal)
-                    {
-                        Vector2Int horizontal = new(from.x + dir.x, from.y);
-                        Vector2Int vertical = new(from.x, from.y + dir.y);
+                    if (!IsWalkable(target))
+                        continue; // blocked
 
-                        // Only block if BOTH adjacent sides are blocked
-                        if (!IsWalkable(horizontal) && !IsWalkable(vertical))
-                            break;
-                    }
                     if (IsOccupied(target))
-                        break;
-                    
+                        continue; // occupied by enemy or player
+
                     validMoveTiles.Add(target);
 
                     if (dynamicTiles.TryGetValue(target, out var tile))
