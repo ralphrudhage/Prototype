@@ -5,7 +5,7 @@ namespace DefaultNamespace
     public class Projectile : MonoBehaviour
     {
         private int damage;
-        private const float speed = 5f;
+        private const float speed = 10f;
         private const float lifetime = 3f;
         private Vector2 direction;
         private bool isEnemyTarget;

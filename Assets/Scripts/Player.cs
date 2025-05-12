@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Managers;
@@ -182,6 +183,7 @@ public class Player : MonoBehaviour
     {
         currentGridPos = gridPos;
         transform.position = GridManager.Instance.GetWorldPosition(gridPos);
+        originalPosition = transform.position;
         RefreshPlayerUI();
 
         Debug.Log($"{playerClass} set at {currentGridPos}");
@@ -211,9 +213,50 @@ public class Player : MonoBehaviour
 
     public void AttackEnemy(Vector2 enemyPosition, int damage)
     {
-        var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
-        bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage, true);
+        if (playerClass == PlayerClass.WARRIOR)
+        {
+            CardManager.Instance.GetCurrentEnemy().TakeDamage(damage);
+            StartCoroutine(MeleeAttackAnimation(enemyPosition));
+        }
+        else
+        {
+            StartCoroutine(MeleeAttackAnimation(enemyPosition));
+            var bullet = Instantiate(projectilePrefab, playerTarget.transform.position, Quaternion.identity);
+            bullet.GetComponent<Projectile>().Initialize(enemyPosition, damage, true);
+        }
     }
+    
+    private IEnumerator MeleeAttackAnimation(Vector2 enemyPosition)
+    {
+        Vector3 attackDirection = (enemyPosition - (Vector2)originalPosition).normalized;
+        Vector3 attackPosition = originalPosition + attackDirection * 0.4f; // 0.3 units forward
+
+        float moveDuration = 0.1f; // fast lunge
+        float elapsedTime = 0f;
+
+        // Move forward
+        while (elapsedTime < moveDuration)
+        {
+            transform.position = Vector3.Lerp(originalPosition, attackPosition, elapsedTime / moveDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = attackPosition;
+
+        elapsedTime = 0f;
+
+        // Move back
+        while (elapsedTime < moveDuration)
+        {
+            transform.position = Vector3.Lerp(attackPosition, originalPosition, elapsedTime / moveDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = originalPosition;
+    }
+
 
     public void CastSpell(Card card)
     {

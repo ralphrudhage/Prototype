@@ -525,7 +525,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d723dec2d94c4c2085eacd34dc2c5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCircle: {fileID: 996670326}
   projectilePrefab: {fileID: 4813708244785024224, guid: 8b689429bdcbd41a9a7de55714b60d75, type: 3}
   hpPos: {fileID: 786745742}
   playerTarget: {fileID: 2043005607}
@@ -743,11 +742,6 @@ PrefabInstance:
 --- !u!4 &42877186 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1743856540290703766, guid: b612c77b3096b4cd5a20fdd92f85e795, type: 3}
-  m_PrefabInstance: {fileID: 42877185}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &42877187 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8759373469205329626, guid: b612c77b3096b4cd5a20fdd92f85e795, type: 3}
   m_PrefabInstance: {fileID: 42877185}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &43477629
@@ -1082,7 +1076,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d723dec2d94c4c2085eacd34dc2c5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCircle: {fileID: 509714460}
   projectilePrefab: {fileID: 4813708244785024224, guid: 8b689429bdcbd41a9a7de55714b60d75, type: 3}
   hpPos: {fileID: 741757190}
   playerTarget: {fileID: 1782301868}
@@ -4034,11 +4027,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 533344795067902634, guid: 5747ab70aae8940258c7fcd1050b7414, type: 3}
   m_PrefabInstance: {fileID: 491937604}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &509714460 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8759373469205329626, guid: b612c77b3096b4cd5a20fdd92f85e795, type: 3}
-  m_PrefabInstance: {fileID: 5120930633193371166}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &509714461 stripped
 Transform:
@@ -7797,11 +7785,6 @@ PrefabInstance:
 --- !u!4 &996670325 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1743856540290703766, guid: b612c77b3096b4cd5a20fdd92f85e795, type: 3}
-  m_PrefabInstance: {fileID: 996670324}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &996670326 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8759373469205329626, guid: b612c77b3096b4cd5a20fdd92f85e795, type: 3}
   m_PrefabInstance: {fileID: 996670324}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &997258273
@@ -14719,7 +14702,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d723dec2d94c4c2085eacd34dc2c5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCircle: {fileID: 42877187}
   projectilePrefab: {fileID: 4813708244785024224, guid: 8b689429bdcbd41a9a7de55714b60d75, type: 3}
   hpPos: {fileID: 292374533}
   playerTarget: {fileID: 284836985}

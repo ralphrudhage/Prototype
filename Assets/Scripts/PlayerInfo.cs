@@ -37,7 +37,6 @@ public class PlayerInfo : MonoBehaviour
 
     private void UpdateDefense(int defense)
     {
-        Debug.LogFormat("defense {0}", defense);
         defenseIcon.SetActive(defense > 0);
         if (defense > 0)
         {
