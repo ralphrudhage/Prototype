@@ -17,7 +17,7 @@ public static class GameUtils
     public static Color32 green = new(62, 137, 72, 255);
     public static Color32 darkGreen = new(38, 92, 66, 255);
     public static Color32 lightCyan = new(192, 203, 220, 255);
-    public static Color32 pressedWhite = new(255, 255, 255, 100);
+    public static Color32 pressedWhite = new(255, 255, 255, 10);
     public static Color32 white = new(255, 255, 255, 255);
     public static Color32 blackish = new(24, 20, 37, 255);
     public static Color32 hoofish = new(234, 212, 170, 255);

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Managers;
@@ -6,12 +5,10 @@ using Model;
 using Model.MageCards;
 using Model.PriestCards;
 using Model.WarriorCards;
-using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private GameObject playerCircle;
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private GameObject hpPos;
     [SerializeField] public GameObject playerTarget;
@@ -37,6 +34,7 @@ public class Player : MonoBehaviour
     
     private Vector3 originalPosition;
     private bool isDragging;
+    public Vector2Int? lastHighlightedPos;
 
     private void OnEnable()
     {
@@ -220,7 +218,7 @@ public class Player : MonoBehaviour
         isDragging = true;
         originalPosition = transform.position;
 
-        GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, 3);
+        GridManager.Instance.DisplayWalkableTiles(PartyManager.Instance.currentPlayer.currentGridPos, 3);
     }
 
     private void OnMouseDrag()
@@ -230,8 +228,30 @@ public class Player : MonoBehaviour
         Vector3 newPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         newPosition.z = 0f;
         transform.position = newPosition;
-    }
 
+        Vector2Int gridPos = GridManager.Instance.GetGridPositionFromWorld(newPosition);
+
+        if (gridPos != lastHighlightedPos)
+        {
+            // Clear old highlight
+            if (lastHighlightedPos.HasValue && GridManager.Instance.TryGetDynamicTile(lastHighlightedPos.Value, out var lastTile))
+            {
+                lastTile.ActivatePlayerHighlight(false);
+            }
+
+            // Set new highlight
+            if (GridManager.Instance.IsValidMoveTile(gridPos) && GridManager.Instance.TryGetDynamicTile(gridPos, out var currentTile))
+            {
+                currentTile.ActivatePlayerHighlight(true);
+                lastHighlightedPos = gridPos;
+            }
+            else
+            {
+                lastHighlightedPos = null; // Not valid, don't highlight
+            }
+        }
+    }
+    
     private void OnMouseUp()
     {
         if (!isDragging) return;
@@ -244,25 +264,33 @@ public class Player : MonoBehaviour
         {
             PartyManager.Instance.currentPlayer.SetGridPosition(droppedGridPos);
             PartyManager.Instance.currentPlayer.UseAP(1);
+            
+            if (GridManager.Instance.TryGetDynamicTile(droppedGridPos, out var tile))
+            {
+                tile.ActivatePlayerHighlight(true);
+            }
+            lastHighlightedPos = droppedGridPos;
         }
         else
         {
             transform.position = originalPosition;
             RefreshPlayerUI();
+            
+            if (lastHighlightedPos.HasValue && GridManager.Instance.TryGetDynamicTile(lastHighlightedPos.Value, out var lastTile))
+            {
+                lastTile.ActivatePlayerHighlight(false);
+            }
+            lastHighlightedPos = null;
         }
 
         GridManager.Instance.ClearHighlights();
     }
-
-    public void SelectedCircle()
-    {
-        var circles = GameObject.FindGameObjectsWithTag("circle");
-        foreach (var circle in circles) circle.SetActive(false);
-        playerCircle.SetActive(true);
-    }
-
+    
     public void Deselect()
     {
-        playerCircle.SetActive(false);
+        if (lastHighlightedPos.HasValue && GridManager.Instance.TryGetDynamicTile(lastHighlightedPos.Value, out var tile))
+        {
+            tile.ActivatePlayerHighlight(false);
+        }
     }
 }

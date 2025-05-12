@@ -15,7 +15,7 @@ namespace Managers
         private Enemy currentEnemy;
         private Player currentPartyPlayer;
         private int currentTurn;
-        
+
         public static CardManager Instance { get; private set; }
 
         private void Awake()
@@ -33,7 +33,7 @@ namespace Managers
         {
             actionsParent.transform.DestroyTagRecursively("action");
         }
-        
+
         public void EndTurn()
         {
             DestroyAllCardsFromUI();
@@ -45,21 +45,21 @@ namespace Managers
                     player.discarded.Add(action);
                     Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
                 }
-
-                player.Deselect();
+                
                 player.hand.Clear();
+                player.Deselect();
             }
 
             StartCoroutine(PartyManager.Instance.EnemyTurnThenDraw());
         }
-        
+
         public void DiscardSelectedCard(Card action)
         {
             var player = PartyManager.Instance.currentPlayer;
             player.discarded.Add(action);
             Debug.Log($"{player.playerClass} added {action} to discard pile {player.discarded.Count}");
         }
-        
+
         public void SetCurrentAction(SelectedCard card)
         {
             currentCard = card;
@@ -69,12 +69,12 @@ namespace Managers
         {
             currentEnemy = enemy;
         }
-        
+
         public void SetCurrentPartyPlayer(Player player)
         {
             currentPartyPlayer = player;
         }
-        
+
         public Player GetCurrentPartyPlayer()
         {
             return currentPartyPlayer;
@@ -100,7 +100,7 @@ namespace Managers
 
             return true;
         }
-        
+
         private void DestroyAllCardsFromUI()
         {
             var unselectedActions = GameObject.FindGameObjectsWithTag("action");
@@ -109,13 +109,21 @@ namespace Managers
                 Destroy(action);
             }
         }
-        
+
         public void ShowHandForPlayer(Player player)
         {
             Debug.Log($"Showing hand for {player.playerClass} with size {player.hand.Count}");
             
-            player.SelectedCircle();
+            currentPlayer?.Deselect();
+            
             currentPlayer = player;
+
+            if (GridManager.Instance.TryGetDynamicTile(player.currentGridPos, out var tile))
+            {
+                tile.ActivatePlayerHighlight(true);
+                player.lastHighlightedPos = player.currentGridPos;
+            }
+
             DestroyAllCardsFromUI();
             StartCoroutine(ShowHandWithDelay(player));
         }

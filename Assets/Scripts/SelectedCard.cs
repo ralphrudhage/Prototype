@@ -92,7 +92,7 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         switch (card)
         {
             case MoveCard move:
-                GridManager.Instance.ShowMoveCircles(PartyManager.Instance.currentPlayer.currentGridPos, move.range);
+                GridManager.Instance.DisplayWalkableTiles(PartyManager.Instance.currentPlayer.currentGridPos, move.range);
                 break;
         }
     }

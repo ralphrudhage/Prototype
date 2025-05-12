@@ -12,6 +12,7 @@ public class DynamicTile : MonoBehaviour
 {
     [SerializeField] private Sprite whiteSprite;
     [SerializeField] private GameObject highLight;
+    [SerializeField] private GameObject playerHighLight;
     [SerializeField] private List<Sprite> dynamicSprites;
     
     private SpriteRenderer highlightSpriteRenderer;
@@ -28,6 +29,7 @@ public class DynamicTile : MonoBehaviour
         startingSprite = tileType == TileType.Standard ? PickBiasedSprite() : spriteRenderer.sprite;
         spriteRenderer.sprite = startingSprite;
         highLight.SetActive(false);
+        playerHighLight.SetActive(false);
         originalPosition = transform;
     }
 
@@ -47,7 +49,11 @@ public class DynamicTile : MonoBehaviour
     public void SetHighlight(bool isHighlighted)
     {
         highLight.SetActive(isHighlighted);
-        highlightSpriteRenderer.color = GameUtils.lightYellow;
+    }
+
+    public void ActivatePlayerHighlight(bool isHighlighted)
+    {
+        playerHighLight.SetActive(isHighlighted);
     }
 
     public void WhiteTile()

@@ -29,7 +29,8 @@ namespace Managers
 
             foreach (var tile in FindObjectsByType<DynamicTile>(FindObjectsSortMode.None))
             {
-                Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(tile.transform.position.x), Mathf.RoundToInt(tile.transform.position.y));
+                Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(tile.transform.position.x),
+                    Mathf.RoundToInt(tile.transform.position.y));
 
                 if (!gridCells.ContainsKey(gridPos))
                 {
@@ -42,10 +43,15 @@ namespace Managers
                     Debug.LogWarning($"Duplicate tile at grid position {gridPos}, skipping.");
                 }
             }
-            
+
             Debug.Log($"Grid initialized with {gridCells.Count} walkable tiles.");
         }
-        
+
+        public bool TryGetDynamicTile(Vector2Int gridPos, out DynamicTile tile)
+        {
+            return dynamicTiles.TryGetValue(gridPos, out tile);
+        }
+
         public bool IsValidMoveTile(Vector2Int pos)
         {
             return validMoveTiles.Contains(pos);
@@ -65,46 +71,58 @@ namespace Managers
         {
             return new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.y));
         }
-        
-        public void ShowMoveCircles(Vector2Int from, int range)
+
+        public void DisplayWalkableTiles(Vector2Int from, int range)
         {
             ClearHighlights();
             validMoveTiles.Clear();
 
-            int distance = range;
+            Queue<(Vector2Int pos, int steps)> frontier = new();
+            HashSet<Vector2Int> visited = new();
+            frontier.Enqueue((from, 0));
+            visited.Add(from);
 
-            for (int x = from.x - distance; x <= from.x + distance; x++)
+            while (frontier.Count > 0)
             {
-                for (int y = from.y - distance; y <= from.y + distance; y++)
+                var (currentPos, currentSteps) = frontier.Dequeue();
+
+                if (currentSteps >= range)
+                    continue;
+
+                foreach (var neighbor in GetNeighbors(currentPos))
                 {
-                    Vector2Int target = new Vector2Int(x, y);
+                    if (visited.Contains(neighbor))
+                        continue;
 
-                    if (target == from)
-                        continue; // don't highlight the tile player is standing on
+                    if (!IsWalkable(neighbor))
+                        continue;
 
-                    if (!gridCells.ContainsKey(target))
-                        continue; // no tile
+                    if (IsOccupied(neighbor))
+                        continue;
 
-                    if (!IsWalkable(target))
-                        continue; // blocked
+                    visited.Add(neighbor);
+                    frontier.Enqueue((neighbor, currentSteps + 1));
 
-                    if (IsOccupied(target))
-                        continue; // occupied by enemy or player
+                    if (neighbor != from) // don't highlight your own tile
+                    {
+                        validMoveTiles.Add(neighbor);
 
-                    validMoveTiles.Add(target);
-
-                    if (dynamicTiles.TryGetValue(target, out var tile))
-                        tile.SetHighlight(true);
+                        if (dynamicTiles.TryGetValue(neighbor, out var tile))
+                        {
+                            tile.HighLightTileColor(GameUtils.pressedWhite);
+                            tile.SetHighlight(true);
+                        }
+                    }
                 }
             }
         }
-        
+
         public void ClearHighlights()
         {
             foreach (var tile in dynamicTiles.Values)
                 tile.SetHighlight(false);
         }
-        
+
         public bool HasLineOfSight(Vector2Int from, Vector2Int to)
         {
             Vector2 direction = (to - from);
@@ -124,7 +142,7 @@ namespace Managers
 
             return true;
         }
-        
+
         public void OnHighlightTileClicked(Vector2Int gridPos)
         {
             if (CardManager.Instance.PerformAction())
@@ -155,7 +173,7 @@ namespace Managers
                 foreach (var neighbor in GetNeighbors(current.pos))
                 {
                     if (visited.Contains(neighbor)) continue;
-                    if (!gridCells.ContainsKey(neighbor)) continue; // block unwalkable
+                    if (!gridCells.ContainsKey(neighbor) || !IsWalkable(neighbor)) continue;
 
                     var newPath = new List<Vector2Int>(current.path) { neighbor };
                     int g = current.g + 1;
@@ -172,7 +190,7 @@ namespace Managers
         {
             return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
         }
-        
+
         public List<Vector2Int> GetNeighbors(Vector2Int pos)
         {
             var directions = new List<Vector2Int>
@@ -216,14 +234,14 @@ namespace Managers
 
             return results;
         }
-        
+
         public bool IsWalkable(Vector2Int pos)
         {
             bool result = gridCells.TryGetValue(pos, out var cell) && cell.isWalkable;
             // if (!result) Debug.Log($"Tile {pos} is not walkable");
             return result;
         }
-        
+
         private bool IsOccupied(Vector2Int gridPos)
         {
             Vector3 worldPos = GetWorldPosition(gridPos);
