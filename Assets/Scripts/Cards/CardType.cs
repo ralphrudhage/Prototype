@@ -6,6 +6,7 @@ namespace Model
         DOT,
         MELEE,
         RANGED,
+        DEFENSE,
         MOVE
     }
 }

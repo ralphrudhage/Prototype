@@ -14,7 +14,7 @@ public class DynamicTile : MonoBehaviour
     [SerializeField] private GameObject highLight;
     [SerializeField] private GameObject playerHighLight;
     [SerializeField] private List<Sprite> dynamicSprites;
-    
+
     private SpriteRenderer highlightSpriteRenderer;
     private SpriteRenderer spriteRenderer;
     private Sprite startingSprite;
@@ -28,24 +28,28 @@ public class DynamicTile : MonoBehaviour
 
         startingSprite = tileType == TileType.Standard ? PickBiasedSprite() : spriteRenderer.sprite;
         spriteRenderer.sprite = startingSprite;
-        highLight.SetActive(false);
-        playerHighLight.SetActive(false);
+        if (tileType == TileType.Standard)
+        {
+            highLight.SetActive(false);
+            playerHighLight.SetActive(false);
+        }
+
         originalPosition = transform;
     }
 
     private Sprite PickBiasedSprite()
     {
         float roll = Random.value;
-        
+
         if (roll < 0.8f || dynamicSprites.Count == 1)
         {
             return dynamicSprites[0];
         }
-        
+
         int index = Random.Range(1, dynamicSprites.Count);
         return dynamicSprites[index];
     }
-    
+
     public void SetHighlight(bool isHighlighted)
     {
         highLight.SetActive(isHighlighted);
@@ -68,12 +72,12 @@ public class DynamicTile : MonoBehaviour
         spriteRenderer.color = Color.white;
         transform.position = originalPosition.position;
     }
-    
+
     public void ColorTile(Color32 color)
     {
         spriteRenderer.color = color;
     }
-    
+
     public void HighLightTileColor(Color32 color)
     {
         highlightSpriteRenderer.color = color;
@@ -83,7 +87,7 @@ public class DynamicTile : MonoBehaviour
     {
         return originalPosition;
     }
-    
+
     public void FadeAndDisableHighlight(float duration = 0.5f, float startDelay = 0.25f)
     {
         StartCoroutine(FadeHighlightCoroutine(duration, startDelay));
@@ -110,6 +114,4 @@ public class DynamicTile : MonoBehaviour
         sr.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f); // Ensure fully transparent
         SetHighlight(false);
     }
-
 }
-

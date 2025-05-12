@@ -67,6 +67,9 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
                     card.effect
                 );
                 break;
+            case CardType.DEFENSE:
+                PartyManager.Instance.currentPlayer.CardEffect(card);
+                break;
             case CardType.PARTY:
                 PartyManager.Instance.currentPlayer.CastSpell(card);
                 CardManager.Instance.GetCurrentPartyPlayer().CardEffect(card);
@@ -89,10 +92,10 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         cardImage.color = new Color(cardImage.color.r, cardImage.color.g, cardImage.color.b, 0.5f);
 
-        switch (card)
+        switch (card.type)
         {
-            case MoveCard move:
-                GridManager.Instance.DisplayWalkableTiles(PartyManager.Instance.currentPlayer.currentGridPos, move.range);
+            case CardType.MOVE:
+                GridManager.Instance.DisplayWalkableTiles(PartyManager.Instance.currentPlayer.currentGridPos, card.range);
                 break;
         }
     }
@@ -141,6 +144,16 @@ public class SelectedCard : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
                 return false;
             }
+            case CardType.DEFENSE:
+            {
+                var hit = Physics2D.OverlapPoint(droppedWorldPos);
+                if (hit != null && hit.TryGetComponent<Player>(out var player))
+                {
+                    if (player == PartyManager.Instance.currentPlayer) return true;
+                }
+                return false;
+            }
+                
             // damage attacks
             case CardType.RANGED or CardType.DOT or CardType.MELEE:
             {

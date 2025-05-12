@@ -19,6 +19,8 @@ public class Player : MonoBehaviour
     private const int maxHp = 100;
     private int currentHp;
 
+    private int currentDefense;
+
     private const int maxActionPoints = 3;
     private int currentAP;
 
@@ -82,12 +84,12 @@ public class Player : MonoBehaviour
             case PlayerClass.WARRIOR:
                 actions.AddRange(new Card[]
                 {
-                    new Charge("Charge", 1, 20, 3),
-                    new Charge("Charge", 1, 20, 3),
-                    new Charge("Charge", 1, 20, 3),
-                    new Charge("Charge", 1, 20, 3),
-                    new Charge("Charge", 1, 20, 3),
-                    new Charge("Charge", 1, 20, 3),
+                    new Block("Block", 1, 20, 1),
+                    new Block("Block", 1, 20, 1),
+                    new Block("Block", 1, 20, 1),
+                    new Block("Block", 1, 20, 1),
+                    new Block("Block", 1, 20, 1),
+                    new Block("Block", 1, 20, 1),
                     new Strike("Strike", 1, 20, 1),
                     new Strike("Strike", 1, 20, 1),
                     new Strike("Strike", 1, 20, 1),
@@ -143,15 +145,33 @@ public class Player : MonoBehaviour
         PlayerUI.Instance.UpdatePlayerUI(this);
 
         playerInfoObject.transform.position = Camera.main.WorldToScreenPoint(hpPos.transform.position);
-        playerInfo.UpdatePlayerInfo(currentHp, maxHp, currentAP);
+        playerInfo.UpdatePlayerInfo(currentHp, maxHp, currentAP, currentDefense);
     }
 
     public void TakeDamage(int damageTaken)
     {
         Instantiate(bloodPrefab, playerTarget.transform.position, Quaternion.identity);
+
+        int damageAfterDefense = damageTaken;
+
+        if (currentDefense > 0)
+        {
+            Debug.LogFormat("Player {0} takes {1} damage, absorbing {2} defense", playerClass, damageTaken, currentDefense);
+            int defenseAbsorbed = Mathf.Min(currentDefense, damageTaken);
+            currentDefense -= defenseAbsorbed;
+            damageAfterDefense -= defenseAbsorbed;
+            Debug.LogFormat("damage after defense: {0}", damageAfterDefense);
+        }
+
+        if (damageAfterDefense > 0)
+        {
+            currentHp -= damageAfterDefense;
+        }
+
         textSpawner.SpawnFloatingText(damageTaken.ToString(), playerTarget.transform.position, GameUtils.lightRed);
-        currentHp -= damageTaken;
+
         RefreshPlayerUI();
+
         if (currentHp <= 0)
         {
             Debug.Log($"{playerClass} DIED");
@@ -203,9 +223,17 @@ public class Player : MonoBehaviour
     public void CardEffect(Card card)
     {
         Debug.LogFormat("Player {0} receives card effect {1} with effect {2}", playerClass, card.name, card.effect);
-        currentHp += card.effect;
-        textSpawner.SpawnFloatingText(card.effect.ToString(), playerTarget.transform.position, GameUtils.lightYellow);
-        RefreshPlayerUI();
+        
+        if (card.type == CardType.DEFENSE)
+        {
+            currentDefense += card.effect;
+        }
+        else
+        {
+            currentHp += card.effect;
+            textSpawner.SpawnFloatingText("+" + card.effect, playerTarget.transform.position, GameUtils.lightYellow);
+            RefreshPlayerUI(); 
+        }
     }
     
     private void OnMouseDown()
