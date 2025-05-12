@@ -15,7 +15,7 @@ public class FxManager : MonoBehaviour
     {
         effects = new List<FxRoutine>
         {
-            ExplosionEffectCoroutine,
+            // ExplosionEffectCoroutine,
             WhiteOutCoroutine,
             WhiteInCoroutine,
             RandomFlickerWithColorsCoroutine,
@@ -26,7 +26,7 @@ public class FxManager : MonoBehaviour
 
     public void Explode()
     {
-        StartCoroutine(ExplosionEffectCoroutine());
+        // StartCoroutine(ExplosionEffectCoroutine());
     }
 
     public void PlayNextEffect()
@@ -127,26 +127,25 @@ public class FxManager : MonoBehaviour
             yield return new WaitForSeconds(0.015f);
         }
     }
-    
-    private IEnumerator ExplosionEffectCoroutine()
+
+
+    public void ExplodeAt(Vector2Int center)
+    {
+        StartCoroutine(ExplosionEffectCoroutine(center));
+    }
+
+    private IEnumerator ExplosionEffectCoroutine(Vector2Int center)
     {
         var tiles = FindObjectsByType<DynamicTile>(FindObjectsSortMode.None).ToList();
-
-        // Center = average tile position
-        Vector2 avgPos = tiles.Select(t => (Vector2)t.transform.position).Aggregate(Vector2.zero, (sum, pos) => sum + pos) / tiles.Count;
-        DynamicTile centerTile = tiles.OrderBy(t => Vector2.Distance(t.transform.position, avgPos)).First();
-        Vector2Int center = Vector2Int.RoundToInt(centerTile.transform.position);
-
 
         var localTiles = tiles
             .Where(t =>
             {
                 Vector2Int pos = Vector2Int.RoundToInt(t.transform.position);
                 float dist = Vector2.Distance(new Vector2(pos.x, pos.y), new Vector2(center.x, center.y));
-                return dist <= 2.5f; // 2.5 gives a good approximation of a "round" 5x5 area
+                return dist <= 2.5f; // 2.5 gives a good "round" explosion
             })
             .ToList();
-
 
         var groups = localTiles
             .GroupBy(t => Mathf.RoundToInt(Vector2.Distance(t.transform.position, center)))
@@ -159,7 +158,7 @@ public class FxManager : MonoBehaviour
         {
             foreach (var tile in group)
             {
-                // fire colors
+                // Set fire color
                 Color32 color = group.Key switch
                 {
                     0 => new Color32(255, 100, 30, 255),
@@ -167,23 +166,11 @@ public class FxManager : MonoBehaviour
                     2 => new Color32(255, 240, 100, 255),
                     _ => new Color32(255, 255, 150, 255)
                 };
-                
-                // plasma
-                /*
-                Color32 color = group.Key switch
-                {
-                    0 => new Color32(80, 150, 255, 255),   // electric blue core
-                    1 => new Color32(60, 120, 240, 255),   // cooler mid ring
-                    2 => new Color32(40, 90, 200, 255),    // deep plasma blue
-                    _ => new Color32(30, 60, 160, 255)     // fading outer rim
-                };
-                */
-                
+
                 tile.SetHighlight(true);
                 tile.HighLightTileColor(color);
                 tile.FadeAndDisableHighlight();
 
-                // Push outward
                 Vector3 dir = tile.transform.position - new Vector3(center.x, center.y, 0f);
                 Vector3 targetPos = tile.GetOriginalPosition().position + dir * rippleDistance;
 
@@ -192,14 +179,14 @@ public class FxManager : MonoBehaviour
 
             yield return new WaitForSeconds(waitBetweenRings);
         }
-        
-        // After explosion, apply ripple to nearby surrounding tiles (but not colored ones)
+
+        // Ripple effect outside explosion
         foreach (var tile in tiles.Except(localTiles))
         {
             Vector2Int pos = Vector2Int.RoundToInt(tile.transform.position);
             float dist = Vector2.Distance(pos, center);
-            
-            if (dist > 2.5f && dist <= 3.5f) // just outside explosion
+
+            if (dist > 2.5f && dist <= 3.5f)
             {
                 float delay = (dist - 2.5f) * waitBetweenRings;
                 StartCoroutine(ApplyRippleOnly(tile, delay, rippleDistance * 0.5f, center));
@@ -207,7 +194,6 @@ public class FxManager : MonoBehaviour
         }
     }
 
-    
     private IEnumerator RippleReturn(DynamicTile tile, Vector3 pushedPos, Vector3 originalPos, Color32 color)
     {
         // Move to pushed position
@@ -227,7 +213,7 @@ public class FxManager : MonoBehaviour
         tile.StartingTile();
         tile.transform.position = originalPos;
     }
-    
+
     private IEnumerator ApplyRippleOnly(DynamicTile tile, float delay, float pushAmount, Vector2 center)
     {
         yield return new WaitForSeconds(delay);

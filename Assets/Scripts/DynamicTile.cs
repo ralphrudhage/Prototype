@@ -10,6 +10,7 @@ public enum TileType
 
 public class DynamicTile : MonoBehaviour
 {
+    [SerializeField] private Sprite targetSprite;
     [SerializeField] private Sprite whiteSprite;
     [SerializeField] private GameObject highLight;
     [SerializeField] private GameObject playerHighLight;
@@ -20,6 +21,7 @@ public class DynamicTile : MonoBehaviour
     private Sprite startingSprite;
     private Transform originalPosition;
     public TileType tileType = TileType.Standard;
+    public bool target;
 
     private void Awake()
     {
@@ -52,6 +54,7 @@ public class DynamicTile : MonoBehaviour
 
     public void SetHighlight(bool isHighlighted)
     {
+        if (target) return;
         highLight.SetActive(isHighlighted);
     }
 
@@ -73,6 +76,22 @@ public class DynamicTile : MonoBehaviour
         transform.position = originalPosition.position;
     }
 
+    public void MarkTileAsTarget()
+    {
+        highLight.SetActive(true);
+        target = true;
+        highlightSpriteRenderer.sprite = targetSprite;
+        highlightSpriteRenderer.color = GameUtils.lightRed;
+    }
+
+    public void ResetTile()
+    {
+        SetHighlight(false);
+        spriteRenderer.sprite = startingSprite;
+        spriteRenderer.color = Color.white;
+        highlightSpriteRenderer.sprite = whiteSprite;
+    }
+    
     public void ColorTile(Color32 color)
     {
         spriteRenderer.color = color;
@@ -80,6 +99,7 @@ public class DynamicTile : MonoBehaviour
 
     public void HighLightTileColor(Color32 color)
     {
+        if (target) return;
         highlightSpriteRenderer.color = color;
     }
 

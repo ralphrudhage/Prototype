@@ -9,9 +9,19 @@ namespace DefaultNamespace
         private const float lifetime = 3f;
         private Vector2 direction;
         private bool isEnemyTarget;
+        private Player playerTarget;
 
         public void Initialize(Vector2 targetPosition, int targetDamage, bool isEnemy)
         {
+            direction = (targetPosition - (Vector2)transform.position).normalized;
+            damage = targetDamage;
+            isEnemyTarget = isEnemy;
+            Destroy(gameObject, lifetime);
+        }
+        
+        public void Initialize(Player player, Vector2 targetPosition, int targetDamage, bool isEnemy)
+        {
+            playerTarget = player;
             direction = (targetPosition - (Vector2)transform.position).normalized;
             damage = targetDamage;
             isEnemyTarget = isEnemy;
@@ -37,8 +47,12 @@ namespace DefaultNamespace
             {
                 if (other.CompareTag("Player"))
                 {
-                    other.gameObject.GetComponent<Player>().TakeDamage(damage);
-                    Destroy(gameObject, 0.1f);
+                    var player = other.gameObject.GetComponent<Player>();
+                    if (player == playerTarget)
+                    {
+                        player.TakeDamage(damage);
+                        Destroy(gameObject, 0.1f);
+                    }
                 }
             }
         }

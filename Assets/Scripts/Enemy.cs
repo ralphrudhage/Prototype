@@ -14,6 +14,10 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject bloodParent;
     [SerializeField] private GameObject bloodPrefab;
 
+    private Vector2Int? markedTilePos = null; // Nullable, so null if no tile is marked
+    private bool willExplodeNextTurn = false;
+
+
     public Vector2Int currentGridPos;
 
     private const int maxHp = 100;
@@ -22,16 +26,18 @@ public class Enemy : MonoBehaviour
     private const int maxActionPoints = 3;
     private int currentAP;
 
-    private const int rangedAttack = 6;
+    private const int rangedAttack = 100;
     private const int attackApCost = 2;
     private const int damage = 10;
 
-    private const float actionDelay = 0.25f;
+    private const float actionDelay = 0.5f;
 
     private TextSpawner textSpawner;
     private GameObject healthBar;
     private GameObject infoText;
-    private Player currentPlayerTarget;
+    private readonly List<Player> currentPlayerTargets = new();
+
+    private Vector3 originalPosition;
 
     public Vector2 targetPos;
 
@@ -47,6 +53,8 @@ public class Enemy : MonoBehaviour
         transform.position = GridManager.Instance.GetWorldPosition(currentGridPos);
         healthBar = textSpawner.SpawnHealthBar();
         infoText = textSpawner.SpawnInfoText("AP: + " + currentAP, infoPos.transform.position);
+
+        originalPosition = transform.position;
 
         RefreshEnemyUI();
     }
@@ -89,13 +97,27 @@ public class Enemy : MonoBehaviour
                HasStrictLineOfSight(PartyManager.Instance.currentPlayer.currentGridPos, currentGridPos);
     }
 
-    private Player FindPlayerTarget()
+    private void FindPlayerTargets()
     {
-        currentPlayerTarget = null;
-        var players = GameObject.FindGameObjectsWithTag("Player");
-        return players.Select(player => player.GetComponent<Player>()).FirstOrDefault(target =>
-            IsInRange(target.currentGridPos, rangedAttack) &&
-            HasStrictLineOfSight(currentGridPos, target.currentGridPos) && currentAP >= attackApCost);
+        currentPlayerTargets.Clear();
+
+        var players = GameObject.FindGameObjectsWithTag("Player")
+            .Select(go => go.GetComponent<Player>())
+            .Where(p => p != null)
+            .ToList();
+
+        Debug.LogFormat("found {0} players", players.Count);
+
+        foreach (var player in players)
+        {
+            if (IsInRange(player.currentGridPos, rangedAttack) &&
+                HasStrictLineOfSight(currentGridPos, player.currentGridPos) &&
+                currentAP >= attackApCost)
+            {
+                currentPlayerTargets.Add(player);
+                Debug.LogFormat("added {0} to targetList", player.playerClass);
+            }
+        }
     }
 
     private bool IsInRange(Vector2Int origin, int range)
@@ -182,39 +204,141 @@ public class Enemy : MonoBehaviour
         currentAP = maxActionPoints;
         RefreshEnemyUI();
 
+        if (willExplodeNextTurn && markedTilePos.HasValue)
+        {
+            ExplodeMarkedTile();
+            willExplodeNextTurn = false;
+            markedTilePos = null;
+            yield return new WaitForSeconds(actionDelay);
+        }
+
         while (currentAP > 0)
         {
             yield return new WaitForSeconds(actionDelay);
 
-            currentPlayerTarget = FindPlayerTarget();
+            bool attacked = AttackPlayer();
 
-            if (currentPlayerTarget != null)
-            {
-                AttackPlayer();
-                currentAP = 0;
+            if (currentAP <= 0)
                 break;
+
+            if (attacked)
+            {
+                // Successful attack
+                if (currentAP >= 1)
+                {
+                    Debug.Log($"Enemy had AP left after attack, marking tile for explosion.");
+                    MarkTileNearPlayer();
+                    willExplodeNextTurn = true;
+                    currentAP = 0; // After marking, end turn
+                }
+
+                break; // End after attack
             }
 
-            if (currentAP >= 1)
-            {
-                yield return TryMoveTowardPlayer();
-            }
-            else
-            {
+            // Failed to attack ➔ try moving
+            Debug.Log($"Enemy failed to attack, trying to move.");
+            yield return TryMoveTowardPlayer();
+
+            if (currentAP <= 0)
                 break;
+
+            yield return new WaitForSeconds(actionDelay);
+
+            // Try attack again after moving
+            attacked = AttackPlayer();
+
+            if (currentAP <= 0)
+                break;
+
+            if (!attacked)
+            {
+                Debug.Log($"Enemy failed attack after move, marking tile for explosion.");
+                MarkTileNearPlayer();
+                willExplodeNextTurn = true;
+                currentAP = 0; // After marking, end turn
             }
+
+            break; // Whether second attack worked or not, end after
         }
 
-        Debug.Log($"Enemy at {currentGridPos} ends turn.");
+        Debug.Log($"Enemy at {currentGridPos} ends turn with {currentAP} AP remaining.");
     }
 
-    private Vector2Int FindClosestPlayerTarget()
+    private void MarkTileNearPlayer()
     {
-        if (currentPlayerTarget != null)
+        var players = GameObject.FindGameObjectsWithTag("Player")
+            .Select(go => go.GetComponent<Player>())
+            .Where(p => p != null)
+            .ToList();
+
+        foreach (var player in players)
         {
-            return currentPlayerTarget.currentGridPos;
+            int dx = Mathf.Abs(currentGridPos.x - player.currentGridPos.x);
+            int dy = Mathf.Abs(currentGridPos.y - player.currentGridPos.y);
+            bool adjacentToEnemy = Mathf.Max(dx, dy) <= 1;
+
+            if (adjacentToEnemy)
+                continue; // skip players adjacent to enemy (want ranged ones)
+
+            // Pick one of the player's adjacent tiles
+            List<Vector2Int> adjacentTiles = GridManager.Instance.GetNeighbors(player.currentGridPos);
+
+            foreach (var tilePos in adjacentTiles)
+            {
+                if (!GridManager.Instance.IsWalkable(tilePos))
+                    continue;
+
+                if (!IsOccupied(tilePos))
+                {
+                    markedTilePos = tilePos;
+                    Debug.Log($"Enemy marks tile at {tilePos}!");
+
+                    if (GridManager.Instance.TryGetDynamicTile(tilePos, out var tile))
+                    {
+                        tile.MarkTileAsTarget();
+                    }
+
+                    return;
+                }
+            }
         }
 
+        Debug.Log("Couldn't find tile to mark.");
+    }
+
+    private void ExplodeMarkedTile()
+    {
+        if (!markedTilePos.HasValue)
+            return;
+
+        Vector2Int pos = markedTilePos.Value;
+
+        Debug.Log($"Exploding tile at {pos}!");
+
+        // Check if a player is standing there
+        Vector3 worldPos = GridManager.Instance.GetWorldPosition(pos);
+        var hit = Physics2D.OverlapPoint(worldPos);
+
+        if (hit != null && hit.GetComponent<Player>() != null)
+        {
+            Player player = hit.GetComponent<Player>();
+            player.TakeDamage(15); // Arbitrary explosion damage
+            Debug.Log($"Player {player.playerClass} hit by explosion!");
+        }
+
+        // Optionally reset the tile visual
+        if (GridManager.Instance.TryGetDynamicTile(pos, out var tile))
+        {
+            tile.ResetTile();
+        }
+
+        // Tell FxManager to explode at that center
+        FindAnyObjectByType<FxManager>().ExplodeAt(pos);
+    }
+
+
+    private Player FindClosestPlayerTarget()
+    {
         var players = GameObject.FindGameObjectsWithTag("Player")
             .Select(go => go.GetComponent<Player>())
             .Where(p => p != null)
@@ -223,24 +347,27 @@ public class Enemy : MonoBehaviour
         if (players.Count == 0)
         {
             Debug.LogWarning("No players found!");
-            return currentGridPos;
+            return null;
         }
 
         Player closest = players
             .OrderBy(p => Vector2Int.Distance(currentGridPos, p.currentGridPos))
             .First();
-        
-        Debug.Log($"enemy selected target {closest.playerClass} at {closest.currentGridPos}");
-        currentPlayerTarget = closest;
 
-        return closest.currentGridPos;
+        Debug.Log($"Enemy selected target {closest.playerClass} at {closest.currentGridPos}");
+
+        return closest;
     }
 
     private IEnumerator TryMoveTowardPlayer()
     {
         if (currentAP <= 0) yield break;
 
-        Vector2Int playerPos = FindClosestPlayerTarget();
+        Player closestPlayer = FindClosestPlayerTarget();
+        if (closestPlayer == null) yield break;
+
+        Vector2Int playerPos = closestPlayer.currentGridPos;
+
         Vector2Int? bestMove = null;
         float bestDistance = float.MaxValue;
 
@@ -293,7 +420,7 @@ public class Enemy : MonoBehaviour
 
             yield return MoveTo(path[i]);
         }
-        
+
         RefreshEnemyUI();
     }
 
@@ -302,6 +429,7 @@ public class Enemy : MonoBehaviour
     {
         currentGridPos = pos;
         transform.position = GridManager.Instance.GetWorldPosition(pos);
+        originalPosition = transform.position;
         currentAP -= 1;
         RefreshEnemyUI();
 
@@ -309,15 +437,86 @@ public class Enemy : MonoBehaviour
     }
 
 
-    private void AttackPlayer()
+    private bool AttackPlayer()
     {
-        Debug.Log($"enemy attack {currentPlayerTarget.playerClass} at {currentPlayerTarget.currentGridPos}");
-        var bullet = Instantiate(projectilePrefab, bloodParent.transform.position, Quaternion.identity);
-        bullet.GetComponent<Projectile>()
-            .Initialize(currentPlayerTarget.playerTarget.transform.position, damage, false);
+        Debug.Log($"Enemy attacking players...");
+
+        FindPlayerTargets();
+
+        if (currentPlayerTargets.Count == 0)
+        {
+            Debug.Log("No targets found.");
+            return false; // No attack performed
+        }
+
+        // Check for any adjacent player first
+        var adjacentPlayer = currentPlayerTargets.FirstOrDefault(player =>
+        {
+            int dx = Mathf.Abs(currentGridPos.x - player.currentGridPos.x);
+            int dy = Mathf.Abs(currentGridPos.y - player.currentGridPos.y);
+            return Mathf.Max(dx, dy) == 1;
+        });
+
+        if (adjacentPlayer != null)
+        {
+            Debug.Log($"Melee attacking {adjacentPlayer.playerClass}!");
+            StartCoroutine(PerformMeleeAttack(adjacentPlayer));
+            return true; // Attack performed
+        }
+
+        // No adjacent players ➔ shoot all ranged targets
+        foreach (var player in currentPlayerTargets)
+        {
+            Debug.Log($"Ranged attacking {player.playerClass}!");
+            var bullet = Instantiate(projectilePrefab, bloodParent.transform.position, Quaternion.identity);
+            bullet.GetComponent<Projectile>()
+                .Initialize(player, player.playerTarget.transform.position, damage, false);
+        }
 
         currentAP -= attackApCost;
         RefreshEnemyUI();
+        return true; // Attack performed
+    }
+
+    private IEnumerator PerformMeleeAttack(Player target)
+    {
+        yield return MeleeAttackAnimation(target.transform.position);
+
+        target.TakeDamage(damage);
+
+        currentAP -= attackApCost;
+        RefreshEnemyUI();
+    }
+
+    private IEnumerator MeleeAttackAnimation(Vector2 enemyPosition)
+    {
+        Vector3 attackDirection = (enemyPosition - (Vector2)originalPosition).normalized;
+        Vector3 attackPosition = originalPosition + attackDirection * 0.4f; // 0.3 units forward
+
+        float moveDuration = 0.1f; // fast lunge
+        float elapsedTime = 0f;
+
+        // Move forward
+        while (elapsedTime < moveDuration)
+        {
+            transform.position = Vector3.Lerp(originalPosition, attackPosition, elapsedTime / moveDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = attackPosition;
+
+        elapsedTime = 0f;
+
+        // Move back
+        while (elapsedTime < moveDuration)
+        {
+            transform.position = Vector3.Lerp(attackPosition, originalPosition, elapsedTime / moveDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = originalPosition;
     }
 
     private bool IsOccupied(Vector2Int pos)

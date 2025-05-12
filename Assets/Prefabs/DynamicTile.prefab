@@ -289,6 +289,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 353c6c67b6750438a87fd245017bd53d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetSprite: {fileID: 21300000, guid: dfd16b599572c4dc580fc6843b0480a5, type: 3}
   whiteSprite: {fileID: 21300000, guid: c00abdcd09b764c12b6b49b12eec0e8d, type: 3}
   highLight: {fileID: 7402125268183792620}
   playerHighLight: {fileID: 2326323067568978124}
